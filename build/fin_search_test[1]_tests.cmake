@@ -1,0 +1,7 @@
+add_test([=[EngineTest.QueryReturnsNearestNeighbor]=]  /app/build/fin_search_test [==[--gtest_filter=EngineTest.QueryReturnsNearestNeighbor]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[EngineTest.QueryReturnsNearestNeighbor]=]  PROPERTIES WORKING_DIRECTORY /app/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+add_test([=[CsvParserTest.ParsesClosePricesCorrectly]=]  /app/build/fin_search_test [==[--gtest_filter=CsvParserTest.ParsesClosePricesCorrectly]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[CsvParserTest.ParsesClosePricesCorrectly]=]  PROPERTIES WORKING_DIRECTORY /app/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+add_test([=[CsvParserTest.HandlesMissingFile]=]  /app/build/fin_search_test [==[--gtest_filter=CsvParserTest.HandlesMissingFile]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[CsvParserTest.HandlesMissingFile]=]  PROPERTIES WORKING_DIRECTORY /app/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+set(  fin_search_test_TESTS EngineTest.QueryReturnsNearestNeighbor CsvParserTest.ParsesClosePricesCorrectly CsvParserTest.HandlesMissingFile)
