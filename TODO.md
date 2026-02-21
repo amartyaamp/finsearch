@@ -25,7 +25,7 @@ This document tracks the planned features and improvements for the FinSearch (Ti
 - [ ] **Expanded Test Suite:** 
     - [ ] Unit tests for edge cases in `normalize_window`.
     - [ ] Mock tests for FAISS index creation failure scenarios.
-- [ ] **CI/CD Integration:** Set up GitHub Actions to run tests and build Docker images on every push.
+- [x] **CI/CD Integration:** Set up GitHub Actions to run tests and build Docker images on every push.
 
 ## ⚡ Performance
 - [ ] **FAISS-GPU:** Add support for GPU-accelerated searches for significantly larger datasets.
