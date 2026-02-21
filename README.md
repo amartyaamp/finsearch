@@ -14,6 +14,18 @@ This project provides a high-performance similarity search tool for financial ti
 
 ---
 
+### 🚀 Quick Start (Local CI)
+
+For a one-click build and test cycle (similar to the GitHub Actions pipeline), run the local CI script:
+
+```bash
+chmod +x run_local_ci.sh
+./run_local_ci.sh
+```
+This script builds the Docker image and executes all unit tests automatically.
+
+---
+
 ### 1. Build the Project (Docker)
 
 To build the environment and compile the source code:
@@ -35,17 +47,19 @@ To process a historical CSV and save a reusable FAISS index:
 
 ```bash
 docker run --rm -v "$(pwd)":/app fin_search \
-  ./fin_search index data/nifty_50.csv my_index.faiss
+  fin_search index data/nifty_50.csv my_index.faiss
 ```
 - `data/nifty_50.csv`: Path to historical data (inside `/app`).
 - `my_index.faiss`: Output filename for the index.
+
+> 💡 **Note**: This command creates **two** files: `my_index.faiss` (the vector index) and `my_index.faiss.meta` (human-readable metadata). Both are required for searching.
 
 #### **B. Search for Patterns**
 To search for the most recent pattern (last 60 rows) in a query file against an existing index:
 
 ```bash
 docker run --rm -v "$(pwd)":/app fin_search \
-  ./fin_search search my_index.faiss data/nifty_50.csv
+  fin_search search my_index.faiss data/sample.csv
 ```
 The results will include **Confidence Scores** and **Date Ranges** for the matches.
 
@@ -56,7 +70,7 @@ The results will include **Confidence Scores** and **Date Ranges** for the match
 To verify the implementation logic:
 
 ```bash
-docker run --rm fin_search ./fin_search_test
+docker run --rm fin_search fin_search_test
 ```
 
 ---

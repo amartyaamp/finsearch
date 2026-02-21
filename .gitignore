@@ -14,3 +14,11 @@ fin_search_test
 
 # macOS
 .DS_Store
+
+# Generated Index Files
+*.faiss
+*.faiss.meta
+
+# Binaries
+fin_search
+fin_search_test
