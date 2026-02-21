@@ -1,57 +1,78 @@
-## Time Series Pattern Matcher (FAISS Implementation)
+## Financial Pattern Search (FAISS Implementation)
 
-This project uses C++ and the FAISS library to perform similarity search on Z-score normalized time series data. This document provides instructions for setting up the environment using Docker and building the executable.
+This project provides a high-performance similarity search tool for financial time series data (e.g., stock prices). It uses **FAISS** for vector indexing and **Z-score normalization** to match patterns based on shape rather than absolute price levels.
+
+### Key Features
+- **Confidence Scoring**: Normalized similarity scores (0-100%) for intuitive results.
+- **Metadata Tagging**: Supports tracking timestamps/dates for matched patterns.
+- **Decoupled Workflow**: Separate commands for building an index and searching against it.
+
+---
 
 ### Prerequisites
+- **Docker**: Recommended for a consistent build environment (includes FAISS, CMake 3.28+, and GTest).
 
-You must have the following tools installed on your system:
+---
 
-Docker: Used to create a reproducible build and runtime environment.
+### 1. Build the Project (Docker)
 
-Make: Used to orchestrate the build process (assumes a standard Makefile is present).
+To build the environment and compile the source code:
 
-### 1. Building the Docker Image
-
-The Docker image encapsulates the necessary dependencies (GCC, FAISS, etc.) required to compile and run the application.
-
-Navigate to the root directory of the project where your Dockerfile is located.
-
-Build the image and tag it as pattern-matcher:
-
-```
-docker build -t pattern-matcher .
+```bash
+docker build -t fin_search .
 ```
 
-### 2. Compiling the Code
+This image contains the compiled binaries: `fin_search` (main CLI) and `fin_search_test` (unit tests).
 
-We will use the custom Docker container to execute the build commands and compile the C++ source files (`engine.cpp`, `main.cpp`, `csv_parser.cpp`, etc.).
+---
 
-Run the Container in Build Mode: Start a container from the image and mount your local source directory `($(pwd)` to the `/app` directory inside the container. This allows the compiled binary to persist on your host machine.
+### 2. Using the CLI
 
+The application uses a command-based interface.
+
+#### **A. Build an Index**
+To process a historical CSV and save a reusable FAISS index:
+
+```bash
+docker run --rm -v "$(pwd)":/app fin_search \
+  ./fin_search index data/nifty_50.csv my_index.faiss
 ```
-docker run --rm -v "$(pwd)":/app pattern-matcher /bin/bash -c "make all"
+- `data/nifty_50.csv`: Path to historical data (inside `/app`).
+- `my_index.faiss`: Output filename for the index.
+
+#### **B. Search for Patterns**
+To search for the most recent pattern (last 60 rows) in a query file against an existing index:
+
+```bash
+docker run --rm -v "$(pwd)":/app fin_search \
+  ./fin_search search my_index.faiss data/nifty_50.csv
+```
+The results will include **Confidence Scores** and **Date Ranges** for the matches.
+
+---
+
+### 3. Running Unit Tests
+
+To verify the implementation logic:
+
+```bash
+docker run --rm fin_search ./fin_search_test
 ```
 
-`--rm`: Removes the container once it exits.
+---
 
-`-v "$(pwd)":/app`: Mounts the current directory to /app.
+### 4. Local Build (Advanced)
 
-`/bin/bash -c "make all"`: Executes the make all command inside the container to compile the project.
+If you have FAISS and CMake 3.24+ installed locally:
 
-Verify the Build: If successful, an executable file (e.g., pattern_match or main) will be created in your local project directory.
-
-### 3. Running the Application
-
-The application requires the historical price data file, which must be made accessible to the container at runtime.
-
-Data Requirement: Ensure the `nifty_50.csv` file (or your input data) is available in a location that can be mounted to the container. The application is hardcoded to look for the data at `/app/data/nifty_50.csv`.
-
-Execute the Binary: Run the application, ensuring the data directory is mounted correctly.
+```bash
+mkdir build && cd build
+cmake ..
+make
+./fin_search --help
 ```
-docker run --rm \
-  -v "$(pwd)/data":/app/data \
-  pattern-matcher \
-  /app/pattern_match
 
-```
-The output will show the index creation and the nearest neighbor results based on the last 60 minutes of data.
+---
+
+### Data Format
+The CSV should contain a `Close` price column (Z-score normalization is applied automatically) and metadata columns for dates/timestamps.
