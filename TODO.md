@@ -6,8 +6,9 @@ This document tracks the planned features and improvements for the FinSearch (Ti
 - [ ] **Configurable Parameters:** Allow `WINDOW_SIZE` and `K_NEIGHBORS` to be passed as command-line arguments.
 - [ ] **Extended Distance Metrics:** Implement support for Inner Product and Cosine Similarity in addition to L2.
 - [ ] **Normalization Strategies:** Add Min-Max scaling and Robust Scaler options.
-- [ ] **Multivariate Support:** Enable pattern matching across multiple time series (e.g., Price + Volume).
-- [ ] **Metadata Tagging:** Store and return timestamps/dates along with the index positions for better result interpretation.
+- [ ] **Multivariate Support (MVP Critical):** Enable pattern matching across multiple time series (e.g., Price + Volume). *Crucial because pattern shapes mean little without the context of trading volume to confirm institutional participation.*
+- [ ] **Metadata Tagging (MVP Critical):** Store and return timestamps/dates, and contextual metadata along with the index positions. *Crucial because knowing when a pattern occurred (e.g., 2008 crash vs. 2021 bull run) is required for strategy context.*
+- [ ] **Confidence Scoring (MVP Critical):** Map absolute vector distances to a normalized "Similarity/Confidence Score" (e.g., 0-100%). *Crucial because humans (retail traders) and external systems need an intuitive bounding box on how "exact" a match is, unlike rigid rule-based systems.*
 
 ## 🏗 Architectural Refactoring
 - [x] **Decoupled Indexing Flow:** Create a separate flow/utility for indexing. This process will read the entire historical dataset, create the FAISS index, and persist the created index to disk (e.g., as a `.index` file) along with necessary metadata.
@@ -16,7 +17,7 @@ This document tracks the planned features and improvements for the FinSearch (Ti
 - [ ] **Index Versioning:** Store metadata (WINDOW_SIZE, normalization type) alongside the persisted index to ensure consistency during lookups.
 
 ## 🚀 Service & API Layer
-- [ ] **Service/API Support:** Create a service or API layer (e.g., using Crow, gRPC, or a Python/Flask wrapper) that utilizes the C++ libraries built so far to expose indexing and querying capabilities over a network.
+- [ ] **Service/API API (MVP Critical):** Create a robust REST API service layer (e.g., Python/FastAPI wrapper or Crow C++) that exposes indexing and querying capabilities. *Crucial because this is the primary monetization surface for B2B clients, Hedge Funds, and automated bot developers (SaaS model).*
 - [ ] **Library Packaging:** Refactor the core engine into a clean shared library (`.so` / `.dylib`) for easier integration into broader financial systems and the API layer.
 - [ ] **C++ Service Core:** Develop a service wrapper around the existing libraries to handle concurrent search requests.
 
@@ -33,7 +34,8 @@ This document tracks the planned features and improvements for the FinSearch (Ti
 - [ ] **Memory Management:** Optimize memory consumption when loading very large historical CSVs.
 
 ## 🌐 UI & Integration
-- [ ] **Visualization Dashboard:** Build a simple web interface (React/Next.js) to display query patterns and their nearest matches side-by-side using charts.
+- [ ] **Visualization Dashboard (MVP Critical):** Build a simple web interface (React/Next.js) to display query patterns and their nearest matches side-by-side using charts. *Crucial because it serves as the secondary monetization surface for retail traders and visually demonstrates the API's power to prospective B2B buyers.*
+- [ ] **Chatbot Interface (B2C Focus):** Create integrations with messaging platforms (WhatsApp, Discord, Telegram) to allow users to subscribe to specific pattern alerts or query recent patterns directly from their phones.
 - [ ] **Live Data Sources:** Implement connectors for real-time financial data APIs (e.g., Alpha Vantage, Polygon.io). *(Depends on: Optimize Persistent Storage)*
 
 ## 📄 Documentation
