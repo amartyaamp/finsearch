@@ -98,3 +98,24 @@ TEST_F(FaissIndexBackendTest, SearchReturnsValidResults) {
   EXPECT_LE(results[0].distance, 1e-5);
   EXPECT_EQ(results[0].metadata.start_date, dummy_metadata[0].timestamp);
 }
+
+TEST_F(FaissIndexBackendTest, SearchIncludesConfidenceScore) {
+  FaissIndexBackend backend;
+  backend.build_index(dummy_prices, dummy_metadata, window_size);
+
+  // Query with the very first window — it is an exact match of itself
+  std::vector<float> target_query(dummy_prices.begin(),
+                                  dummy_prices.begin() + window_size);
+  auto results = backend.search(target_query, 5, window_size);
+
+  ASSERT_FALSE(results.empty());
+
+  for (const auto &res : results) {
+    // Every confidence score must be in [0, 100]
+    EXPECT_GE(res.confidence_score, 0.0f);
+    EXPECT_LE(res.confidence_score, 100.0f);
+  }
+
+  // The top result is an exact self-match (distance ≈ 0) → must be ≥ 99%
+  EXPECT_GE(results[0].confidence_score, 99.0f);
+}

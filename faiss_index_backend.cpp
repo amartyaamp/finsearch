@@ -177,6 +177,7 @@ FaissIndexBackend::search(const std::vector<float> &raw_query_pattern,
   for (int i = 0; i < k; ++i) {
     SearchResult res;
     res.distance = D_dist[i];
+    res.confidence_score = compute_confidence_score(D_dist[i], (float)D);
     res.index = I[i];
     if (res.index >= 0 && res.index < metadata_store.size()) {
       res.metadata = metadata_store[res.index];

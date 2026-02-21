@@ -1,6 +1,7 @@
 #include "csv_parser.h"
 #include "faiss_index_backend.h"
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
 #include <string>
 
@@ -106,9 +107,12 @@ int handle_search_command(int argc, char *argv[]) {
   if (!results.empty()) {
     std::cout << "\n=== Search Results (" << results.size()
               << " Nearest Neighbors) ===\n";
+    std::cout << std::fixed << std::setprecision(2);
     for (size_t i = 0; i < results.size(); i++) {
-      std::cout << "Rank " << i + 1 << " | Index: " << results[i].index
+      std::cout << "Rank " << i + 1
+                << " | Confidence: " << results[i].confidence_score << "%"
                 << " | Distance: " << results[i].distance
+                << " | Index: " << results[i].index
                 << " | Dates: " << results[i].metadata.start_date << " to "
                 << results[i].metadata.end_date << std::endl;
     }

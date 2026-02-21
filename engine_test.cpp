@@ -72,3 +72,40 @@ TEST(EngineTest, QueryReturnsNearestNeighbor) {
   ASSERT_EQ(results[1].index, 0); // The P_Far pattern is indexed at index 0.
   ASSERT_NEAR(results[1].distance, expected_far_squared_distance, 1e-4);
 }
+
+// ---- Confidence Score Unit Tests ----
+
+TEST(ComputeConfidenceScore, PerfectMatchGives100) {
+  // A distance of 0 (exact self-match) must yield exactly 100%
+  float score = compute_confidence_score(0.0f, 60.0f);
+  EXPECT_FLOAT_EQ(score, 100.0f);
+}
+
+TEST(ComputeConfidenceScore, LargeDistanceGivesLowScore) {
+  // A very large distance should collapse the score close to 0
+  float score = compute_confidence_score(1e6f, 60.0f);
+  EXPECT_LT(score, 0.01f);
+}
+
+TEST(ComputeConfidenceScore, MonotonicallyDecreasing) {
+  // Score must strictly decrease as distance increases
+  float s1 = compute_confidence_score(1.0f, 10.0f);
+  float s2 = compute_confidence_score(5.0f, 10.0f);
+  float s3 = compute_confidence_score(20.0f, 10.0f);
+  EXPECT_GT(s1, s2);
+  EXPECT_GT(s2, s3);
+}
+
+TEST(ComputeConfidenceScore, InvalidScaleHandled) {
+  // scale <= 0 must not crash; we clamp it to 1.0
+  EXPECT_NO_THROW({
+    float score = compute_confidence_score(1.0f, 0.0f);
+    EXPECT_LT(score, 100.0f);
+    EXPECT_GE(score, 0.0f);
+  });
+  EXPECT_NO_THROW({
+    float score = compute_confidence_score(1.0f, -5.0f);
+    EXPECT_LT(score, 100.0f);
+    EXPECT_GE(score, 0.0f);
+  });
+}

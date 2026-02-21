@@ -50,3 +50,15 @@ extract_and_normalize_patterns(const std::vector<float> &prices,
   }
   return patterns;
 }
+
+// Maps an L2 distance to a 0-100% confidence score using exponential decay.
+// score = 100 * exp(-distance / scale)
+// - distance=0  → score=100% (perfect match)
+// - distance→∞  → score→0%
+// - scale=window_size makes the decay dimensionality-aware (a distance of D
+//   in a D-dimensional L2 space yields ~37%, a natural "half-life" point)
+float compute_confidence_score(float distance, float scale) {
+  if (scale <= 0.0f)
+    scale = 1.0f; // guard against invalid input
+  return 100.0f * std::exp(-distance / scale);
+}

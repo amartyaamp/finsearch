@@ -8,7 +8,7 @@ This document tracks the planned features and improvements for the FinSearch (Ti
 - [ ] **Normalization Strategies:** Add Min-Max scaling and Robust Scaler options.
 - [ ] **Multivariate Support (MVP Critical):** Enable pattern matching across multiple time series (e.g., Price + Volume). *Crucial because pattern shapes mean little without the context of trading volume to confirm institutional participation.*
 - [x] **Metadata Tagging (MVP Critical):** Store and return timestamps/dates, and contextual metadata along with the index positions. *Crucial because knowing when a pattern occurred (e.g., 2008 crash vs. 2021 bull run) is required for strategy context.*
-- [ ] **Confidence Scoring (MVP Critical):** Map absolute vector distances to a normalized "Similarity/Confidence Score" (e.g., 0-100%). *Crucial because humans (retail traders) and external systems need an intuitive bounding box on how "exact" a match is, unlike rigid rule-based systems.*
+- [x] **Confidence Scoring (MVP Critical):** Map absolute vector distances to a normalized "Similarity/Confidence Score" (e.g., 0-100%). *Crucial because humans (retail traders) and external systems need an intuitive bounding box on how "exact" a match is, unlike rigid rule-based systems.*
 - [ ] **Arbitrary Data Sources:** Support time series data from any data source, abstracting away the hard dependency on the CSV file schema.
 
 ## 🏗 Architectural Refactoring

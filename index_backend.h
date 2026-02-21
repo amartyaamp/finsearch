@@ -13,6 +13,8 @@ struct WindowMetadata {
 
 struct SearchResult {
   float distance;
+  float confidence_score; // Normalized similarity: 100% = perfect match, 0% =
+                          // no match
   long index;
   WindowMetadata metadata;
 };
