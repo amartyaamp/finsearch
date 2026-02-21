@@ -1,100 +1,110 @@
-#include <algorithm>
-#include <filesystem> // For checking file existence
+#include "csv_parser.h"
+#include "faiss_index_backend.h"
+#include <filesystem>
 #include <iostream>
-#include <memory>
 #include <string>
-#include <vector>
 
-#include "csv_parser.h" // Data loading logic
-#include "engine.h"     // Core FAISS and normalization logic
-
-// CONFIGURATION
 const int WINDOW_SIZE = 60;
 const int K_NEIGHBORS = 5;
-const std::string DEFAULT_HISTORY_FILE = "/app/data/nifty_50.csv";
-const std::string DEFAULT_QUERY_FILE = "/app/data/sample_queries.csv";
 
 void print_usage(const char *prog_name) {
-  std::cout << "Usage: " << prog_name << " [query_csv_path]\n";
-  std::cout << "  If no query file is provided, defaults to: "
-            << DEFAULT_QUERY_FILE << "\n";
+  std::cout << "Usage: " << prog_name << " <command> [arguments]\n";
+  std::cout << "Commands:\n";
+  std::cout << "  index  <history_csv_path> <output_index_path>\n";
+  std::cout << "         Example: " << prog_name
+            << " index /app/data/nifty_50.csv my_nifty.index\n";
+  std::cout << "  search <input_index_path> <query_csv_path>\n";
+  std::cout << "         Example: " << prog_name
+            << " search my_nifty.index /app/data/sample_queries.csv\n";
 }
 
-int main(int argc, char *argv[]) {
-  // --- Phase 1: Load Historical Data (The Database) ---
-  std::cout << "[1] Loading Historical Data from: " << DEFAULT_HISTORY_FILE
-            << std::endl;
-  auto history_prices = load_csv_close_prices(DEFAULT_HISTORY_FILE);
+int handle_index_command(int argc, char *argv[]) {
+  if (argc < 4) {
+    std::cerr << "Error: 'index' command requires history_csv_path and "
+                 "output_index_path.\n";
+    print_usage(argv[0]);
+    return 1;
+  }
+
+  std::string history_csv = argv[2];
+  std::string output_index = argv[3];
+
+  std::cout << "[1] Loading Historical Data from: " << history_csv << std::endl;
+  auto history_prices = load_csv_close_prices(history_csv);
 
   if (history_prices.size() < WINDOW_SIZE) {
-    std::cerr
-        << "Error: History file has not enough data points! Need at least "
-        << WINDOW_SIZE << "." << std::endl;
-    return 1;
-  }
-  std::cout << "    Loaded " << history_prices.size() << " historical points."
-            << std::endl;
-
-  // --- Phase 2: Load Query Data (The Pattern to Search) ---
-  std::string query_file_path = (argc > 1) ? argv[1] : DEFAULT_QUERY_FILE;
-  std::cout << "[2] Loading Query Data from: " << query_file_path << std::endl;
-
-  // Check if query file exists
-  if (!std::filesystem::exists(query_file_path)) {
-    std::cerr << "Error: Query file not found at " << query_file_path
-              << std::endl;
-    std::cerr << "Please create this file or provide a path as an argument."
-              << std::endl;
+    std::cerr << "Error: History file (" << history_csv
+              << ") has not enough data points! Need at least " << WINDOW_SIZE
+              << "." << std::endl;
     return 1;
   }
 
-  auto query_prices = load_csv_close_prices(query_file_path);
+  // HACK: Duplicating the last price point so the engine "skips" this dummy
+  // point and indexes the actual last window of history. (Preserving prior
+  // logic behavior)
+  history_prices.push_back(history_prices.back());
+
+  std::cout << "[2] Creating FAISS Index..." << std::endl;
+  FaissIndexBackend backend;
+  backend.build_index(history_prices, WINDOW_SIZE);
+
+  std::cout << "[3] Saving FAISS Index to: " << output_index << std::endl;
+  backend.save_index(output_index);
+
+  return 0;
+}
+
+int handle_search_command(int argc, char *argv[]) {
+  if (argc < 4) {
+    std::cerr << "Error: 'search' command requires input_index_path and "
+                 "query_csv_path.\n";
+    print_usage(argv[0]);
+    return 1;
+  }
+
+  std::string input_index = argv[2];
+  std::string query_csv = argv[3];
+
+  if (!std::filesystem::exists(query_csv)) {
+    std::cerr << "Error: Query file not found at " << query_csv << std::endl;
+    return 1;
+  }
+  if (!std::filesystem::exists(input_index)) {
+    std::cerr << "Error: Index file not found at " << input_index << std::endl;
+    return 1;
+  }
+
+  std::cout << "[1] Loading FAISS Index from: " << input_index << std::endl;
+  FaissIndexBackend backend;
+  backend.load_index(input_index, WINDOW_SIZE);
+
+  if (backend.get_total_vectors() == 0) {
+    std::cerr << "Error: Loaded index is empty or failed to load." << std::endl;
+    return 1;
+  }
+
+  std::cout << "[2] Loading Query Data from: " << query_csv << std::endl;
+  auto query_prices = load_csv_close_prices(query_csv);
 
   if (query_prices.size() < WINDOW_SIZE) {
     std::cerr << "Error: Query file too short. Need at least " << WINDOW_SIZE
-              << " rows to form a pattern." << std::endl;
+              << " rows." << std::endl;
     return 1;
   }
-  std::cout << "    Loaded " << query_prices.size() << " query points."
-            << std::endl;
 
-  // Extract the LAST window from the query file as our target pattern
   std::vector<float> raw_query_pattern(query_prices.end() - WINDOW_SIZE,
                                        query_prices.end());
 
-  // --- Phase 3: Create Index ---
-  std::cout << "[3] Creating FAISS Index from History..." << std::endl;
-
-  // HACK: The create_faiss_index function in engine.cpp skips the LAST window
-  // because it assumes that window is the query.
-  // Since our query is external, we want to index the FULL history.
-  // We duplicate the last price point so the engine "skips" this dummy point
-  // and indexes the actual last window of history.
-  history_prices.push_back(history_prices.back());
-
-  std::unique_ptr<faiss::IndexFlatL2> index =
-      create_faiss_index(history_prices, WINDOW_SIZE);
-
-  if (!index || index->ntotal == 0) {
-    std::cerr << "Error: Failed to create index." << std::endl;
-    return 1;
-  }
-
-  // --- Phase 4: Run Query ---
-  std::cout << "[4] Searching for similar patterns..." << std::endl;
-
+  std::cout << "[3] Searching for similar patterns..." << std::endl;
   auto [distances, indices] =
-      run_faiss_query(index, raw_query_pattern, K_NEIGHBORS, WINDOW_SIZE);
+      backend.search(raw_query_pattern, K_NEIGHBORS, WINDOW_SIZE);
 
-  // --- Phase 5: Output Results ---
   if (!indices.empty()) {
     std::cout << "\n=== Search Results (" << indices.size()
-              << " Nearest Neighbors) ===" << std::endl;
+              << " Nearest Neighbors) ===\n";
     for (size_t i = 0; i < indices.size(); i++) {
       std::cout << "Rank " << i + 1 << " | Index: " << indices[i]
                 << " | Distance: " << distances[i] << std::endl;
-      // Note: 'Index' here refers to the row number in the nifty_50.csv file
-      // where the similar pattern STARTs.
     }
     std::cout << "=================================================\n";
   } else {
@@ -102,4 +112,23 @@ int main(int argc, char *argv[]) {
   }
 
   return 0;
+}
+
+int main(int argc, char *argv[]) {
+  if (argc < 2) {
+    print_usage(argv[0]);
+    return 1;
+  }
+
+  std::string command = argv[1];
+
+  if (command == "index") {
+    return handle_index_command(argc, argv);
+  } else if (command == "search") {
+    return handle_search_command(argc, argv);
+  } else {
+    std::cerr << "Error: Unknown command '" << command << "'\n";
+    print_usage(argv[0]);
+    return 1;
+  }
 }

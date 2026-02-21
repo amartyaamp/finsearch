@@ -16,10 +16,10 @@ endif()
 include_directories(${FAISS_INCLUDE})
 
 # Define the source files (All in the root directory)
-set(ENGINE_SOURCES engine.cpp)
+set(ENGINE_SOURCES engine.cpp faiss_index_backend.cpp)
 set(PARSER_SOURCES csv_parser.cpp)
 set(ALL_SOURCES main.cpp ${ENGINE_SOURCES} ${PARSER_SOURCES})
-set(TEST_SOURCES engine_test.cpp csv_parser_test.cpp)
+set(TEST_SOURCES engine_test.cpp csv_parser_test.cpp faiss_index_backend_test.cpp)
 
 # 2. Define the main executable
 add_executable(fin_search ${ALL_SOURCES})

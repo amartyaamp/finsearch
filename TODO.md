@@ -10,8 +10,9 @@ This document tracks the planned features and improvements for the FinSearch (Ti
 - [ ] **Metadata Tagging:** Store and return timestamps/dates along with the index positions for better result interpretation.
 
 ## 🏗 Architectural Refactoring
-- [ ] **Decoupled Indexing Flow:** Create a separate flow/utility for indexing. This process will read the entire historical dataset, create the FAISS index, and persist the created index to disk (e.g., as a `.index` file) along with necessary metadata.
-- [ ] **Decoupled Query Flow:** Create a separate flow/utility for querying. This process will load the persisted index from disk and perform fast lookups without needing to re-index the historical data.
+- [x] **Decoupled Indexing Flow:** Create a separate flow/utility for indexing. This process will read the entire historical dataset, create the FAISS index, and persist the created index to disk (e.g., as a `.index` file) along with necessary metadata.
+- [x] **Decoupled Query Flow:** Create a separate flow/utility for querying. This process will load the persisted index from disk and perform fast lookups without needing to re-index the historical data.
+- [ ] **Optimize Persistent Storage:** Evaluate and implement optimizations for storing the index and metadata, potentially migrating from local `.index` files to a local database (e.g., SQLite, DuckDB) or a dedicated vector database for better scalability and management.
 - [ ] **Index Versioning:** Store metadata (WINDOW_SIZE, normalization type) alongside the persisted index to ensure consistency during lookups.
 
 ## 🚀 Service & API Layer
@@ -33,7 +34,7 @@ This document tracks the planned features and improvements for the FinSearch (Ti
 
 ## 🌐 UI & Integration
 - [ ] **Visualization Dashboard:** Build a simple web interface (React/Next.js) to display query patterns and their nearest matches side-by-side using charts.
-- [ ] **Live Data Sources:** Implement connectors for real-time financial data APIs (e.g., Alpha Vantage, Polygon.io).
+- [ ] **Live Data Sources:** Implement connectors for real-time financial data APIs (e.g., Alpha Vantage, Polygon.io). *(Depends on: Optimize Persistent Storage)*
 
 ## 📄 Documentation
 - [ ] **API Documentation:** Generate Doxygen or similar documentation for the C++ core.
