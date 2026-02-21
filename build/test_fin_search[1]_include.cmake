@@ -1,5 +1,0 @@
-if(EXISTS "/app/build/test_fin_search[1]_tests.cmake")
-  include("/app/build/test_fin_search[1]_tests.cmake")
-else()
-  add_test(test_fin_search_NOT_BUILT test_fin_search_NOT_BUILT)
-endif()

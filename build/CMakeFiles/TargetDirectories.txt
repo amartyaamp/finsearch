@@ -1,5 +1,0 @@
-/app/build/CMakeFiles/fin_search.dir
-/app/build/CMakeFiles/fin_search_test.dir
-/app/build/CMakeFiles/run_test_discovery.dir
-/app/build/CMakeFiles/edit_cache.dir
-/app/build/CMakeFiles/rebuild_cache.dir
