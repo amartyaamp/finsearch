@@ -1,0 +1,15 @@
+# CMake artifacts
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Binaries
+fin_search_test
+
+# Visual Studio Code
+.vscode/
+
+# macOS
+.DS_Store
