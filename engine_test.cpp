@@ -39,9 +39,12 @@ TEST(EngineTest, QueryReturnsNearestNeighbor) {
   std::vector<float> raw_prices =
       create_raw_data_for_test(raw_pattern_near, raw_pattern_far);
 
+  // Create dummy metadata to satisfy the new interface
+  std::vector<RowMetadata> dummy_meta(raw_prices.size());
+
   // 2. Index Creation (PASS D_TEST)
   FaissIndexBackend backend;
-  backend.build_index(raw_prices, D_TEST);
+  backend.build_index(raw_prices, dummy_meta, D_TEST);
 
   // FIX: Total number of indexable windows is now (N - D + 1) = (6 - 3 + 1)
   // = 4. The indexed patterns start at indices 0, 1, 2, 3.
@@ -51,22 +54,21 @@ TEST(EngineTest, QueryReturnsNearestNeighbor) {
   int k_neighbors = 2;
   // The run_faiss_query function receives the separate, D-dimensional query
   // pattern.
-  auto [distances, indices] =
-      backend.search(raw_query_pattern, k_neighbors, D_TEST);
+  auto results = backend.search(raw_query_pattern, k_neighbors, D_TEST);
 
   // 4. Assertions
-  ASSERT_EQ(indices.size(), k_neighbors);
+  ASSERT_EQ(results.size(), k_neighbors);
 
   // --- ASSERTION 1 (Nearest Neighbor: Index 3) ---
   // The P_Near pattern starts at the 4th element (index 3) in the 6-element
   // history.
-  ASSERT_EQ(indices[0], 3);
-  ASSERT_NEAR(distances[0], 0.0f, 1e-4);
+  ASSERT_EQ(results[0].index, 3);
+  ASSERT_NEAR(results[0].distance, 0.0f, 1e-4);
 
   // --- ASSERTION 2 (Second Nearest Neighbor: Index 0) ---
   // Expected squared distance is D_TEST = 3.0f.
   const float expected_far_squared_distance = (float)D_TEST;
 
-  ASSERT_EQ(indices[1], 0); // The P_Far pattern is indexed at index 0.
-  ASSERT_NEAR(distances[1], expected_far_squared_distance, 1e-4);
+  ASSERT_EQ(results[1].index, 0); // The P_Far pattern is indexed at index 0.
+  ASSERT_NEAR(results[1].distance, expected_far_squared_distance, 1e-4);
 }

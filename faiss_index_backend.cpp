@@ -1,8 +1,10 @@
 #include "faiss_index_backend.h"
 #include "engine.h"
+#include <fstream>
 #include <iostream>
 
 void FaissIndexBackend::build_index(const std::vector<float> &raw_prices,
+                                    const std::vector<RowMetadata> &metadata,
                                     int window_size) {
   const int D = window_size;
 
@@ -20,19 +22,38 @@ void FaissIndexBackend::build_index(const std::vector<float> &raw_prices,
 
   // 2. Create the Index using std::make_unique (L2 distance, Flat storage)
   index = std::make_unique<faiss::IndexFlatL2>(D);
+  metadata_store.clear();
 
   // 3. Prepare data for FAISS (Flatten the 2D vector into a 1D array)
   std::vector<float> all_data;
   all_data.reserve(num_patterns * D);
 
-  for (const auto &pattern : patterns_to_index) {
+  for (size_t i = 0; i < patterns_to_index.size(); ++i) {
+    const auto &pattern = patterns_to_index[i];
     if (pattern.size() != D)
       continue;
     all_data.insert(all_data.end(), pattern.begin(), pattern.end());
+
+    // Store metadata for this window
+    // Window `i` in `patterns_to_index` corresponds to raw_prices from `i` to
+    // `i + D - 1`
+    if (i + D - 1 < metadata.size()) {
+      WindowMetadata win_meta;
+      win_meta.start_date = metadata[i].timestamp;
+      win_meta.end_date = metadata[i + D - 1].timestamp;
+      metadata_store.push_back(win_meta);
+    }
   }
 
   // 4. Add vectors to the index
   index->add(all_data.size() / D, all_data.data());
+
+  // Handle case where we skipped patterns
+  if (metadata_store.size() != index->ntotal) {
+    std::cerr << "Warning: Metadata count (" << metadata_store.size()
+              << ") does not match index count (" << index->ntotal << ")."
+              << std::endl;
+  }
 
   std::cout << "Indexing complete. Total vectors indexed: " << index->ntotal
             << std::endl;
@@ -48,6 +69,20 @@ void FaissIndexBackend::save_index(const std::string &index_path) {
     faiss::write_index(index.get(), index_path.c_str());
     std::cout << "Successfully saved FAISS index to " << index_path
               << std::endl;
+
+    // Save metadata
+    std::string meta_path = index_path + ".meta";
+    std::ofstream meta_file(meta_path);
+    if (meta_file.is_open()) {
+      for (const auto &meta : metadata_store) {
+        meta_file << meta.start_date << "," << meta.end_date << "\n";
+      }
+      std::cout << "Successfully saved metadata to " << meta_path << std::endl;
+    } else {
+      std::cerr << "Error: Could not open metadata file for writing: "
+                << meta_path << std::endl;
+    }
+
   } catch (const faiss::FaissException &ex) {
     std::cerr << "Error saving FAISS index: " << ex.what() << std::endl;
   }
@@ -79,22 +114,52 @@ void FaissIndexBackend::load_index(const std::string &index_path,
     index.reset(typed_index);
     std::cout << "Successfully loaded FAISS index with " << index->ntotal
               << " vectors." << std::endl;
+
+    // Load metadata
+    metadata_store.clear();
+    std::string meta_path = index_path + ".meta";
+    std::ifstream meta_file(meta_path);
+    if (meta_file.is_open()) {
+      std::string line;
+      while (std::getline(meta_file, line)) {
+        size_t comma_pos = line.find(',');
+        if (comma_pos != std::string::npos) {
+          WindowMetadata meta;
+          meta.start_date = line.substr(0, comma_pos);
+          meta.end_date = line.substr(comma_pos + 1);
+          metadata_store.push_back(meta);
+        }
+      }
+      std::cout << "Successfully loaded " << metadata_store.size()
+                << " metadata entries." << std::endl;
+
+      if (metadata_store.size() != index->ntotal) {
+        std::cerr << "Warning: Loaded metadata count (" << metadata_store.size()
+                  << ") does not match index count (" << index->ntotal << ")."
+                  << std::endl;
+      }
+
+    } else {
+      std::cerr << "Warning: Could not open metadata file for reading: "
+                << meta_path << std::endl;
+    }
+
   } catch (const faiss::FaissException &ex) {
     std::cerr << "Error loading FAISS index: " << ex.what() << std::endl;
   }
 }
 
-FaissSearchResults
+std::vector<SearchResult>
 FaissIndexBackend::search(const std::vector<float> &raw_query_pattern,
                           int k_neighbors, int window_size) {
   const int D = window_size;
 
-  FaissSearchResults empty_results = {{}, {}};
+  std::vector<SearchResult> results;
 
   if (!index || index->ntotal == 0 || raw_query_pattern.size() != D) {
     std::cerr << "Error: Invalid index or query pattern size ("
               << raw_query_pattern.size() << " vs " << D << ")." << std::endl;
-    return empty_results;
+    return results;
   }
 
   // 1. Preprocessing: Normalize the raw query pattern
@@ -108,5 +173,18 @@ FaissIndexBackend::search(const std::vector<float> &raw_query_pattern,
   // 3. Search
   index->search(1, query_pattern.data(), k, D_dist.data(), I.data());
 
-  return {D_dist, I};
+  // 4. Package Results
+  for (int i = 0; i < k; ++i) {
+    SearchResult res;
+    res.distance = D_dist[i];
+    res.index = I[i];
+    if (res.index >= 0 && res.index < metadata_store.size()) {
+      res.metadata = metadata_store[res.index];
+    } else {
+      res.metadata = {"UNKNOWN", "UNKNOWN"};
+    }
+    results.push_back(res);
+  }
+
+  return results;
 }

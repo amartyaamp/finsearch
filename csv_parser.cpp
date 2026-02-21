@@ -5,16 +5,17 @@
 #include <string>
 #include <vector>
 
+const int DATE_INDEX = 0;        // 0-based index for the 'date' column
 const int CLOSE_PRICE_INDEX = 4; // 0-based index for the 'close' column
 
-std::vector<float> load_csv_close_prices(const std::string &filename) {
-  std::vector<float> prices;
+TimeSeriesData load_csv_data(const std::string &filename) {
+  TimeSeriesData data;
   std::ifstream file(filename);
   std::string line;
 
   if (!file.is_open()) {
     std::cerr << "Error: Could not open file: " << filename << std::endl;
-    return prices;
+    return data;
   }
 
   // Skip header line
@@ -34,7 +35,13 @@ std::vector<float> load_csv_close_prices(const std::string &filename) {
     if (row.size() > CLOSE_PRICE_INDEX) {
       try {
         // Parse the close price (index 4)
-        prices.push_back(std::stof(row[CLOSE_PRICE_INDEX]));
+        float price = std::stof(row[CLOSE_PRICE_INDEX]);
+        data.prices.push_back(price);
+
+        // Store the timestamp (index 0)
+        RowMetadata meta;
+        meta.timestamp = row[DATE_INDEX];
+        data.row_metadata.push_back(meta);
       } catch (...) {
         // Skip lines with unreadable price data
         std::cerr << "Warning: Failed to parse price at line: " << line
@@ -43,5 +50,10 @@ std::vector<float> load_csv_close_prices(const std::string &filename) {
       }
     }
   }
-  return prices;
+  return data;
+}
+
+std::vector<float> load_csv_close_prices(const std::string &filename) {
+  TimeSeriesData data = load_csv_data(filename);
+  return data.prices;
 }

@@ -30,7 +30,9 @@ int handle_index_command(int argc, char *argv[]) {
   std::string output_index = argv[3];
 
   std::cout << "[1] Loading Historical Data from: " << history_csv << std::endl;
-  auto history_prices = load_csv_close_prices(history_csv);
+  auto data = load_csv_data(history_csv);
+  auto &history_prices = data.prices;
+  auto &history_metadata = data.row_metadata;
 
   if (history_prices.size() < WINDOW_SIZE) {
     std::cerr << "Error: History file (" << history_csv
@@ -43,10 +45,13 @@ int handle_index_command(int argc, char *argv[]) {
   // point and indexes the actual last window of history. (Preserving prior
   // logic behavior)
   history_prices.push_back(history_prices.back());
+  if (!history_metadata.empty()) {
+    history_metadata.push_back(history_metadata.back()); // keep them parallel
+  }
 
   std::cout << "[2] Creating FAISS Index..." << std::endl;
   FaissIndexBackend backend;
-  backend.build_index(history_prices, WINDOW_SIZE);
+  backend.build_index(history_prices, history_metadata, WINDOW_SIZE);
 
   std::cout << "[3] Saving FAISS Index to: " << output_index << std::endl;
   backend.save_index(output_index);
@@ -96,15 +101,16 @@ int handle_search_command(int argc, char *argv[]) {
                                        query_prices.end());
 
   std::cout << "[3] Searching for similar patterns..." << std::endl;
-  auto [distances, indices] =
-      backend.search(raw_query_pattern, K_NEIGHBORS, WINDOW_SIZE);
+  auto results = backend.search(raw_query_pattern, K_NEIGHBORS, WINDOW_SIZE);
 
-  if (!indices.empty()) {
-    std::cout << "\n=== Search Results (" << indices.size()
+  if (!results.empty()) {
+    std::cout << "\n=== Search Results (" << results.size()
               << " Nearest Neighbors) ===\n";
-    for (size_t i = 0; i < indices.size(); i++) {
-      std::cout << "Rank " << i + 1 << " | Index: " << indices[i]
-                << " | Distance: " << distances[i] << std::endl;
+    for (size_t i = 0; i < results.size(); i++) {
+      std::cout << "Rank " << i + 1 << " | Index: " << results[i].index
+                << " | Distance: " << results[i].distance
+                << " | Dates: " << results[i].metadata.start_date << " to "
+                << results[i].metadata.end_date << std::endl;
     }
     std::cout << "=================================================\n";
   } else {

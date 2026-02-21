@@ -11,6 +11,9 @@ protected:
     // Create some dummy synthetic price data
     for (int i = 0; i < 200; ++i) {
       dummy_prices.push_back(100.0f + i * 0.5f);
+      RowMetadata meta;
+      meta.timestamp = "2023-01-01 " + std::to_string(i) + ":00:00";
+      dummy_metadata.push_back(meta);
     }
   }
 
@@ -19,29 +22,38 @@ protected:
     if (std::filesystem::exists(temp_index_path)) {
       std::filesystem::remove(temp_index_path);
     }
+    std::string temp_meta_path = temp_index_path + ".meta";
+    if (std::filesystem::exists(temp_meta_path)) {
+      std::filesystem::remove(temp_meta_path);
+    }
   }
 
   std::vector<float> dummy_prices;
+  std::vector<RowMetadata> dummy_metadata;
   const std::string temp_index_path = "test_index.index";
   const int window_size = 10;
 };
 
 TEST_F(FaissIndexBackendTest, BuildIndexStoresVectors) {
   FaissIndexBackend backend;
-  backend.build_index(dummy_prices, window_size);
+  backend.build_index(dummy_prices, dummy_metadata, window_size);
   // For 200 points and window 10, extract_and_normalize_patterns gives 191
   // patterns.
   EXPECT_EQ(backend.get_total_vectors(), 191);
+  EXPECT_EQ(backend.get_total_metadata(), 191);
 }
 
 TEST_F(FaissIndexBackendTest, SaveAndLoadMaintainsData) {
   // 1. Build and save
   {
     FaissIndexBackend backend;
-    backend.build_index(dummy_prices, window_size);
+    backend.build_index(dummy_prices, dummy_metadata, window_size);
     EXPECT_EQ(backend.get_total_vectors(), 191);
     backend.save_index(temp_index_path);
-    EXPECT_TRUE(std::filesystem::exists(temp_index_path));
+    bool index_exists = std::filesystem::exists(temp_index_path);
+    bool meta_exists = std::filesystem::exists(temp_index_path + ".meta");
+    EXPECT_TRUE(index_exists);
+    EXPECT_TRUE(meta_exists);
   }
 
   // 2. Load into new instance
@@ -49,12 +61,13 @@ TEST_F(FaissIndexBackendTest, SaveAndLoadMaintainsData) {
     FaissIndexBackend loader_backend;
     loader_backend.load_index(temp_index_path, window_size);
     EXPECT_EQ(loader_backend.get_total_vectors(), 191);
+    EXPECT_EQ(loader_backend.get_total_metadata(), 191);
   }
 }
 
 TEST_F(FaissIndexBackendTest, LoadFailsOnDimensionMismatch) {
   FaissIndexBackend backend;
-  backend.build_index(dummy_prices, window_size);
+  backend.build_index(dummy_prices, dummy_metadata, window_size);
   backend.save_index(temp_index_path);
 
   FaissIndexBackend loader_backend;
@@ -69,21 +82,19 @@ TEST_F(FaissIndexBackendTest, LoadFailsOnDimensionMismatch) {
 
 TEST_F(FaissIndexBackendTest, SearchReturnsValidResults) {
   FaissIndexBackend backend;
-  backend.build_index(dummy_prices, window_size);
+  backend.build_index(dummy_prices, dummy_metadata, window_size);
 
   // Create a target query matching the very first window (normalized)
   std::vector<float> target_query(dummy_prices.begin(),
                                   dummy_prices.begin() + window_size);
 
   auto results = backend.search(target_query, 3, window_size);
-  auto distances = results.first;
-  auto indices = results.second;
 
-  ASSERT_EQ(distances.size(), 3);
-  ASSERT_EQ(indices.size(), 3);
+  ASSERT_EQ(results.size(), 3);
 
   // The closest match should be exactly the first pattern at index 0
   // whose distance to itself should be 0 (or close to floating point precision)
-  EXPECT_EQ(indices[0], 0);
-  EXPECT_LE(distances[0], 1e-5);
+  EXPECT_EQ(results[0].index, 0);
+  EXPECT_LE(results[0].distance, 1e-5);
+  EXPECT_EQ(results[0].metadata.start_date, dummy_metadata[0].timestamp);
 }
