@@ -50,3 +50,6 @@ add_custom_target(run_test_discovery
 gtest_discover_tests(fin_search_test
     DEPENDS fin_search_test run_test_discovery
 )
+
+# 7. Install rules
+install(TARGETS fin_search fin_search_test DESTINATION bin)

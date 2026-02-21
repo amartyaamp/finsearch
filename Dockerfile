@@ -39,12 +39,16 @@ RUN cmake -DFAISS_ENABLE_GPU=OFF \
     -DCMAKE_INSTALL_PREFIX=/usr/local \
     . && \
     make -j$(nproc) && \
-    make install
+    make install && \
+    ldconfig
 
 # 3. Final Setup & Build Project
+WORKDIR /src
+COPY . /src
+RUN cmake . && make && make install
+
+# Switch to /app for execution (matches volume mounts)
 WORKDIR /app
-COPY . /app
-RUN cmake . && make
 
 # Default command: run tests to verify build
-CMD ["./fin_search_test"]
+CMD ["fin_search_test"]

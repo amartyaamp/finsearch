@@ -1,0 +1,10 @@
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+build/
+build_debug/
+fin_search
+fin_search_test
+.git/
+.vscode/

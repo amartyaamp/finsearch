@@ -16,6 +16,7 @@ This document tracks the planned features and improvements for the FinSearch (Ti
 - [x] **Decoupled Query Flow:** Create a separate flow/utility for querying. This process will load the persisted index from disk and perform fast lookups without needing to re-index the historical data.
 - [ ] **Optimize Persistent Storage:** Evaluate and implement optimizations for storing the index and metadata, potentially migrating from local `.index` files to a local database (e.g., SQLite, DuckDB) or a dedicated vector database for better scalability and management.
 - [ ] **Index Versioning:** Store metadata (WINDOW_SIZE, normalization type) alongside the persisted index to ensure consistency during lookups.
+- [] **Change `engine.cpp`: (Low hanging fruit)** This contain common util used by IndexBackend and hence should be renamed.
 
 ## 🚀 Service & API Layer
 - [ ] **Service/API API (MVP Critical):** Create a robust REST API service layer (e.g., Python/FastAPI wrapper or Crow C++) that exposes indexing and querying capabilities. *Crucial because this is the primary monetization surface for B2B clients, Hedge Funds, and automated bot developers (SaaS model).*
