@@ -10,6 +10,10 @@ std::vector<std::vector<float>>
 extract_and_normalize_patterns(const std::vector<float> &prices,
                                int window_size);
 
+// Function to extract multivariate and normalized patterns
+std::vector<std::vector<float>> extract_and_normalize_multivariate_patterns(
+    const std::vector<std::vector<float>> &feature_series, int window_size);
+
 // Map an L2 distance to a 0-100% confidence/similarity score.
 // Uses exponential decay: 100 * exp(-distance / scale).
 // A perfect match (distance=0) yields 100%; score decays smoothly as distance

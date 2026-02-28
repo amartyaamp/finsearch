@@ -12,6 +12,7 @@ struct RowMetadata {
 struct TimeSeriesData {
   std::vector<RowMetadata> row_metadata;
   std::vector<float> prices;
+  std::vector<float> volumes;
   // Extensible for multivariate arrays
 };
 

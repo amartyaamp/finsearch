@@ -3,14 +3,16 @@
 #include <fstream>
 #include <iostream>
 
-void FaissIndexBackend::build_index(const std::vector<float> &raw_prices,
-                                    const std::vector<RowMetadata> &metadata,
-                                    int window_size) {
-  const int D = window_size;
+void FaissIndexBackend::build_index(
+    const std::vector<std::vector<float>> &feature_series,
+    const std::vector<RowMetadata> &metadata, int window_size) {
+  if (feature_series.empty())
+    return;
+  const int D = window_size * feature_series.size();
 
   // 1. Preprocessing: Extract and Normalize all index patterns
   auto patterns_to_index =
-      extract_and_normalize_patterns(raw_prices, window_size);
+      extract_and_normalize_multivariate_patterns(feature_series, window_size);
 
   size_t num_patterns = patterns_to_index.size();
 
@@ -36,11 +38,11 @@ void FaissIndexBackend::build_index(const std::vector<float> &raw_prices,
 
     // Store metadata for this window
     // Window `i` in `patterns_to_index` corresponds to raw_prices from `i` to
-    // `i + D - 1`
-    if (i + D - 1 < metadata.size()) {
+    // `i + window_size - 1`
+    if (i + window_size - 1 < metadata.size()) {
       WindowMetadata win_meta;
       win_meta.start_date = metadata[i].timestamp;
-      win_meta.end_date = metadata[i + D - 1].timestamp;
+      win_meta.end_date = metadata[i + window_size - 1].timestamp;
       metadata_store.push_back(win_meta);
     }
   }
@@ -93,9 +95,9 @@ void FaissIndexBackend::load_index(const std::string &index_path,
   try {
     faiss::Index *raw_index = faiss::read_index(index_path.c_str());
 
-    if (raw_index->d != window_size) {
+    if (raw_index->d % window_size != 0) {
       std::cerr << "Error: Loaded index dimension (" << raw_index->d
-                << ") does not match window size (" << window_size << ")."
+                << ") is not a multiple of window size (" << window_size << ")."
                 << std::endl;
       delete raw_index;
       return;
@@ -149,21 +151,29 @@ void FaissIndexBackend::load_index(const std::string &index_path,
   }
 }
 
-std::vector<SearchResult>
-FaissIndexBackend::search(const std::vector<float> &raw_query_pattern,
-                          int k_neighbors, int window_size) {
-  const int D = window_size;
+std::vector<SearchResult> FaissIndexBackend::search(
+    const std::vector<std::vector<float>> &raw_query_series, int k_neighbors,
+    int window_size) {
+  if (raw_query_series.empty())
+    return {};
+  const int D = window_size * raw_query_series.size();
 
   std::vector<SearchResult> results;
 
-  if (!index || index->ntotal == 0 || raw_query_pattern.size() != D) {
-    std::cerr << "Error: Invalid index or query pattern size ("
-              << raw_query_pattern.size() << " vs " << D << ")." << std::endl;
+  if (!index || index->ntotal == 0 ||
+      raw_query_series[0].size() != window_size) {
+    std::cerr << "Error: Invalid index or query pattern size." << std::endl;
     return results;
   }
 
   // 1. Preprocessing: Normalize the raw query pattern
-  std::vector<float> query_pattern = normalize_window(raw_query_pattern);
+  std::vector<float> query_pattern;
+  query_pattern.reserve(D);
+  for (const auto &series : raw_query_series) {
+    auto norm_window = normalize_window(series);
+    query_pattern.insert(query_pattern.end(), norm_window.begin(),
+                         norm_window.end());
+  }
 
   // 2. Search Preparation
   int k = std::min((int)index->ntotal, k_neighbors);

@@ -18,6 +18,8 @@ fin_search_test
 # Generated Index Files
 *.faiss
 *.faiss.meta
+*.index
+*.index.meta
 
 # Binaries
 fin_search

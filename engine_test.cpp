@@ -44,7 +44,7 @@ TEST(EngineTest, QueryReturnsNearestNeighbor) {
 
   // 2. Index Creation (PASS D_TEST)
   FaissIndexBackend backend;
-  backend.build_index(raw_prices, dummy_meta, D_TEST);
+  backend.build_index({raw_prices}, dummy_meta, D_TEST);
 
   // FIX: Total number of indexable windows is now (N - D + 1) = (6 - 3 + 1)
   // = 4. The indexed patterns start at indices 0, 1, 2, 3.
@@ -54,7 +54,7 @@ TEST(EngineTest, QueryReturnsNearestNeighbor) {
   int k_neighbors = 2;
   // The run_faiss_query function receives the separate, D-dimensional query
   // pattern.
-  auto results = backend.search(raw_query_pattern, k_neighbors, D_TEST);
+  auto results = backend.search({raw_query_pattern}, k_neighbors, D_TEST);
 
   // 4. Assertions
   ASSERT_EQ(results.size(), k_neighbors);

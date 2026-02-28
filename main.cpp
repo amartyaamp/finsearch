@@ -33,6 +33,7 @@ int handle_index_command(int argc, char *argv[]) {
   std::cout << "[1] Loading Historical Data from: " << history_csv << std::endl;
   auto data = load_csv_data(history_csv);
   auto &history_prices = data.prices;
+  auto &history_volumes = data.volumes;
   auto &history_metadata = data.row_metadata;
 
   if (history_prices.size() < WINDOW_SIZE) {
@@ -46,13 +47,17 @@ int handle_index_command(int argc, char *argv[]) {
   // point and indexes the actual last window of history. (Preserving prior
   // logic behavior)
   history_prices.push_back(history_prices.back());
+  history_volumes.push_back(history_volumes.back());
   if (!history_metadata.empty()) {
     history_metadata.push_back(history_metadata.back()); // keep them parallel
   }
 
+  std::vector<std::vector<float>> history_features = {history_prices,
+                                                      history_volumes};
+
   std::cout << "[2] Creating FAISS Index..." << std::endl;
   FaissIndexBackend backend;
-  backend.build_index(history_prices, history_metadata, WINDOW_SIZE);
+  backend.build_index(history_features, history_metadata, WINDOW_SIZE);
 
   std::cout << "[3] Saving FAISS Index to: " << output_index << std::endl;
   backend.save_index(output_index);
@@ -90,7 +95,9 @@ int handle_search_command(int argc, char *argv[]) {
   }
 
   std::cout << "[2] Loading Query Data from: " << query_csv << std::endl;
-  auto query_prices = load_csv_close_prices(query_csv);
+  auto query_data = load_csv_data(query_csv);
+  auto &query_prices = query_data.prices;
+  auto &query_volumes = query_data.volumes;
 
   if (query_prices.size() < WINDOW_SIZE) {
     std::cerr << "Error: Query file too short. Need at least " << WINDOW_SIZE
@@ -98,11 +105,16 @@ int handle_search_command(int argc, char *argv[]) {
     return 1;
   }
 
-  std::vector<float> raw_query_pattern(query_prices.end() - WINDOW_SIZE,
-                                       query_prices.end());
+  std::vector<float> raw_query_price(query_prices.end() - WINDOW_SIZE,
+                                     query_prices.end());
+  std::vector<float> raw_query_volume(query_volumes.end() - WINDOW_SIZE,
+                                      query_volumes.end());
+
+  std::vector<std::vector<float>> raw_query_series = {raw_query_price,
+                                                      raw_query_volume};
 
   std::cout << "[3] Searching for similar patterns..." << std::endl;
-  auto results = backend.search(raw_query_pattern, K_NEIGHBORS, WINDOW_SIZE);
+  auto results = backend.search(raw_query_series, K_NEIGHBORS, WINDOW_SIZE);
 
   if (!results.empty()) {
     std::cout << "\n=== Search Results (" << results.size()

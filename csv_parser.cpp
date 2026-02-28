@@ -7,6 +7,7 @@
 
 const int DATE_INDEX = 0;        // 0-based index for the 'date' column
 const int CLOSE_PRICE_INDEX = 4; // 0-based index for the 'close' column
+const int VOLUME_INDEX = 5;      // 0-based index for the 'volume' column
 
 TimeSeriesData load_csv_data(const std::string &filename) {
   TimeSeriesData data;
@@ -37,6 +38,17 @@ TimeSeriesData load_csv_data(const std::string &filename) {
         // Parse the close price (index 4)
         float price = std::stof(row[CLOSE_PRICE_INDEX]);
         data.prices.push_back(price);
+
+        // Parse volume if available, else default to 0
+        float volume = 0.0f;
+        if (row.size() > VOLUME_INDEX) {
+          try {
+            volume = std::stof(row[VOLUME_INDEX]);
+          } catch (...) {
+            // Volume parsing failed, default to 0 is already set
+          }
+        }
+        data.volumes.push_back(volume);
 
         // Store the timestamp (index 0)
         RowMetadata meta;

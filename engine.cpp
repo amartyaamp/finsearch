@@ -51,6 +51,37 @@ extract_and_normalize_patterns(const std::vector<float> &prices,
   return patterns;
 }
 
+std::vector<std::vector<float>> extract_and_normalize_multivariate_patterns(
+    const std::vector<std::vector<float>> &feature_series, int window_size) {
+  std::vector<std::vector<float>> patterns;
+  if (feature_series.empty())
+    return patterns;
+
+  size_t min_len = feature_series[0].size();
+  for (const auto &series : feature_series) {
+    if (series.size() < min_len)
+      min_len = series.size();
+  }
+
+  if (min_len < (size_t)window_size)
+    return patterns;
+
+  for (size_t i = 0; i <= min_len - window_size; ++i) {
+    std::vector<float> concatenated_window;
+    concatenated_window.reserve(window_size * feature_series.size());
+
+    for (const auto &series : feature_series) {
+      std::vector<float> window(series.begin() + i,
+                                series.begin() + i + window_size);
+      std::vector<float> norm_window = normalize_window(window);
+      concatenated_window.insert(concatenated_window.end(), norm_window.begin(),
+                                 norm_window.end());
+    }
+    patterns.push_back(concatenated_window);
+  }
+  return patterns;
+}
+
 // Maps an L2 distance to a 0-100% confidence score using exponential decay.
 // score = 100 * exp(-distance / scale)
 // - distance=0  → score=100% (perfect match)

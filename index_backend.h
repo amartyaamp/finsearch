@@ -23,10 +23,11 @@ class IndexBackend {
 public:
   virtual ~IndexBackend() = default;
 
-  // Build an index from raw, continuous price data and associated metadata
-  virtual void build_index(const std::vector<float> &raw_prices,
-                           const std::vector<RowMetadata> &metadata,
-                           int window_size) = 0;
+  // Build an index from raw, continuous expected variable arrays and associated
+  // metadata
+  virtual void
+  build_index(const std::vector<std::vector<float>> &feature_series,
+              const std::vector<RowMetadata> &metadata, int window_size) = 0;
 
   // Persist the current index to disk
   virtual void save_index(const std::string &index_path) = 0;
@@ -34,8 +35,8 @@ public:
   // Load a persisted index from disk
   virtual void load_index(const std::string &index_path, int window_size) = 0;
 
-  // Search the index with a raw query pattern
+  // Search the index with raw multi-series query patterns
   virtual std::vector<SearchResult>
-  search(const std::vector<float> &query_pattern, int k_neighbors,
+  search(const std::vector<std::vector<float>> &query_series, int k_neighbors,
          int window_size) = 0;
 };

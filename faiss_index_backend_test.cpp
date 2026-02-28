@@ -36,7 +36,7 @@ protected:
 
 TEST_F(FaissIndexBackendTest, BuildIndexStoresVectors) {
   FaissIndexBackend backend;
-  backend.build_index(dummy_prices, dummy_metadata, window_size);
+  backend.build_index({dummy_prices}, dummy_metadata, window_size);
   // For 200 points and window 10, extract_and_normalize_patterns gives 191
   // patterns.
   EXPECT_EQ(backend.get_total_vectors(), 191);
@@ -47,7 +47,7 @@ TEST_F(FaissIndexBackendTest, SaveAndLoadMaintainsData) {
   // 1. Build and save
   {
     FaissIndexBackend backend;
-    backend.build_index(dummy_prices, dummy_metadata, window_size);
+    backend.build_index({dummy_prices}, dummy_metadata, window_size);
     EXPECT_EQ(backend.get_total_vectors(), 191);
     backend.save_index(temp_index_path);
     bool index_exists = std::filesystem::exists(temp_index_path);
@@ -67,7 +67,7 @@ TEST_F(FaissIndexBackendTest, SaveAndLoadMaintainsData) {
 
 TEST_F(FaissIndexBackendTest, LoadFailsOnDimensionMismatch) {
   FaissIndexBackend backend;
-  backend.build_index(dummy_prices, dummy_metadata, window_size);
+  backend.build_index({dummy_prices}, dummy_metadata, window_size);
   backend.save_index(temp_index_path);
 
   FaissIndexBackend loader_backend;
@@ -82,13 +82,13 @@ TEST_F(FaissIndexBackendTest, LoadFailsOnDimensionMismatch) {
 
 TEST_F(FaissIndexBackendTest, SearchReturnsValidResults) {
   FaissIndexBackend backend;
-  backend.build_index(dummy_prices, dummy_metadata, window_size);
+  backend.build_index({dummy_prices}, dummy_metadata, window_size);
 
   // Create a target query matching the very first window (normalized)
   std::vector<float> target_query(dummy_prices.begin(),
                                   dummy_prices.begin() + window_size);
 
-  auto results = backend.search(target_query, 3, window_size);
+  auto results = backend.search({target_query}, 3, window_size);
 
   ASSERT_EQ(results.size(), 3);
 
@@ -101,12 +101,12 @@ TEST_F(FaissIndexBackendTest, SearchReturnsValidResults) {
 
 TEST_F(FaissIndexBackendTest, SearchIncludesConfidenceScore) {
   FaissIndexBackend backend;
-  backend.build_index(dummy_prices, dummy_metadata, window_size);
+  backend.build_index({dummy_prices}, dummy_metadata, window_size);
 
   // Query with the very first window — it is an exact match of itself
   std::vector<float> target_query(dummy_prices.begin(),
                                   dummy_prices.begin() + window_size);
-  auto results = backend.search(target_query, 5, window_size);
+  auto results = backend.search({target_query}, 5, window_size);
 
   ASSERT_FALSE(results.empty());
 
