@@ -76,7 +76,7 @@ TEST_F(FaissIndexBackendTest, LoadFailsOnDimensionMismatch) {
   loader_backend.load_index(temp_index_path, 20);
   std::string output = testing::internal::GetCapturedStderr();
 
-  EXPECT_NE(output.find("does not match window size"), std::string::npos);
+  EXPECT_NE(output.find("is not a multiple of window size"), std::string::npos);
   EXPECT_EQ(loader_backend.get_total_vectors(), 0);
 }
 
