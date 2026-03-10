@@ -21,9 +21,10 @@ This document tracks the planned features and improvements for the FinSearch (Ti
 - [] **Change `engine.cpp`: (Low hanging fruit)** This contain common util used by IndexBackend and hence should be renamed.
 
 ## 🚀 Service & API Layer
-- [ ] **Service/API API (MVP Critical):** Create a robust REST API service layer (e.g., Python/FastAPI wrapper or Crow C++) that exposes indexing and querying capabilities. *Crucial because this is the primary monetization surface for B2B clients, Hedge Funds, and automated bot developers (SaaS model).*
-- [ ] **Library Packaging:** Refactor the core engine into a clean shared library (`.so` / `.dylib`) for easier integration into broader financial systems and the API layer.
-- [ ] **C++ Service Core:** Develop a service wrapper around the existing libraries to handle concurrent search requests.
+- [ ] **Service & API (MVP Critical):** Expose indexing and querying capabilities as a production-ready service. *Crucial because this is the primary monetization surface for B2B clients, Hedge Funds, and automated bot developers (SaaS model).*
+    - [ ] **Library Packaging:** Refactor the core engine into a clean shared library (`.so` / `.dylib`) for easier integration into broader financial systems and the API layer.
+    - [ ] **C++ Service Core:** Develop a concurrency wrapper around the shared library to handle concurrent search requests.
+    - [ ] **REST API:** Create a robust REST API layer (e.g., Python/FastAPI wrapper or Crow C++) that exposes the service endpoints.
 
 ## 🛠 Robustness & Testing
 - [ ] **Advanced CSV Parsing:** Handle malformed CSV files, missing values, and different date formats gracefully.
