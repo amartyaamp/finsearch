@@ -32,32 +32,27 @@ int handle_index_command(int argc, char *argv[]) {
 
   std::cout << "[1] Loading Historical Data from: " << history_csv << std::endl;
   auto data = load_csv_data(history_csv);
-  auto &history_prices = data.prices;
-  auto &history_volumes = data.volumes;
   auto &history_metadata = data.row_metadata;
 
-  if (history_prices.size() < WINDOW_SIZE) {
+  if (data.features.empty() || data.features[0].size() < WINDOW_SIZE) {
     std::cerr << "Error: History file (" << history_csv
               << ") has not enough data points! Need at least " << WINDOW_SIZE
               << "." << std::endl;
     return 1;
   }
 
-  // HACK: Duplicating the last price point so the engine "skips" this dummy
-  // point and indexes the actual last window of history. (Preserving prior
-  // logic behavior)
-  history_prices.push_back(history_prices.back());
-  history_volumes.push_back(history_volumes.back());
-  if (!history_metadata.empty()) {
-    history_metadata.push_back(history_metadata.back()); // keep them parallel
+  // Duplicate the last row so the engine indexes the last window (legacy
+  // behaviour preservation).
+  for (auto &series : data.features) {
+    series.push_back(series.back());
   }
-
-  std::vector<std::vector<float>> history_features = {history_prices,
-                                                      history_volumes};
+  if (!history_metadata.empty()) {
+    history_metadata.push_back(history_metadata.back());
+  }
 
   std::cout << "[2] Creating FAISS Index..." << std::endl;
   FaissIndexBackend backend;
-  backend.build_index(history_features, history_metadata, WINDOW_SIZE);
+  backend.build_index(data.features, history_metadata, WINDOW_SIZE);
 
   std::cout << "[3] Saving FAISS Index to: " << output_index << std::endl;
   backend.save_index(output_index);
@@ -96,22 +91,20 @@ int handle_search_command(int argc, char *argv[]) {
 
   std::cout << "[2] Loading Query Data from: " << query_csv << std::endl;
   auto query_data = load_csv_data(query_csv);
-  auto &query_prices = query_data.prices;
-  auto &query_volumes = query_data.volumes;
 
-  if (query_prices.size() < WINDOW_SIZE) {
+  if (query_data.features.empty() ||
+      query_data.features[0].size() < WINDOW_SIZE) {
     std::cerr << "Error: Query file too short. Need at least " << WINDOW_SIZE
               << " rows." << std::endl;
     return 1;
   }
 
-  std::vector<float> raw_query_price(query_prices.end() - WINDOW_SIZE,
-                                     query_prices.end());
-  std::vector<float> raw_query_volume(query_volumes.end() - WINDOW_SIZE,
-                                      query_volumes.end());
-
-  std::vector<std::vector<float>> raw_query_series = {raw_query_price,
-                                                      raw_query_volume};
+  // Extract the last WINDOW_SIZE data points from each feature series.
+  std::vector<std::vector<float>> raw_query_series;
+  for (const auto &series : query_data.features) {
+    raw_query_series.push_back(
+        std::vector<float>(series.end() - WINDOW_SIZE, series.end()));
+  }
 
   std::cout << "[3] Searching for similar patterns..." << std::endl;
   auto results = backend.search(raw_query_series, K_NEIGHBORS, WINDOW_SIZE);

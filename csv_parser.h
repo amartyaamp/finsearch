@@ -11,9 +11,16 @@ struct RowMetadata {
 // Extensible struct for a complete parsed time series dataset
 struct TimeSeriesData {
   std::vector<RowMetadata> row_metadata;
+
+  // Legacy fields — kept for full backward compatibility.
   std::vector<float> prices;
   std::vector<float> volumes;
-  // Extensible for multivariate arrays
+
+  // Generic feature matrix: features[i] is the full time-series for feature i.
+  // Populated by DataSource implementations so engine code can remain
+  // agnostic of the underlying column schema.
+  std::vector<std::vector<float>> features;
+  std::vector<std::string> feature_names;
 };
 
 // Function to load timestamps and Close prices from a generic financial CSV
