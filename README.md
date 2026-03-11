@@ -3,6 +3,7 @@
 This project provides a high-performance similarity search tool for financial time series data (e.g., stock prices). It uses **FAISS** for vector indexing and **Z-score normalization** to match patterns based on shape rather than absolute price levels.
 
 ### Key Features
+- **REST API**: Production-ready FastAPI endpoints for index building and searching.
 - **Confidence Scoring**: Normalized similarity scores (0-100%) for intuitive results.
 - **Metadata Tagging**: Supports tracking timestamps/dates for matched patterns.
 - **Decoupled Workflow**: Separate commands for building an index and searching against it.
@@ -67,15 +68,27 @@ The results will include **Confidence Scores** and **Date Ranges** for the match
 
 ### 3. Running Unit Tests
 
-To verify the implementation logic:
+To verify the implementation logic (both C++ and Python API tests run automatically):
 
 ```bash
-docker run --rm fin_search fin_search_test
+docker run --rm fin_search
 ```
 
 ---
 
-### 4. Local Build (Advanced)
+### 4. Running the REST API
+
+The FinSearch engine now includes a high-performance REST API built with Python and FastAPI that wraps the C++ core via FFI.
+
+```bash
+docker run -p 8000:8000 --rm -v "$(pwd)":/app fin_search bash -c "uvicorn api.main:app --host 0.0.0.0 --port 8000"
+```
+Once the server is running, you can interact with the auto-generated OpenAPI documentation at:
+**[http://localhost:8000/docs](http://localhost:8000/docs)**
+
+---
+
+### 5. Local Build (Advanced)
 
 If you have FAISS and CMake 3.24+ installed locally:
 

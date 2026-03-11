@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     libopenblas-dev \
     ca-certificates \
     libgtest-dev \
+    python3 \
+    python3-pip \
     # Compiles gtest static library from source installed by libgtest-dev
     && cd /usr/src/googletest/googletest && cmake . && make && cp lib/*.a /usr/lib \ 
     && rm -rf /var/lib/apt/lists/*
@@ -45,10 +47,14 @@ RUN cmake -DFAISS_ENABLE_GPU=OFF \
 # 3. Final Setup & Build Project
 WORKDIR /src
 COPY . /src
-RUN cmake . && make && make install
+RUN cmake . && make && make install && ldconfig
+
+# 4. Install Python dependencies
+COPY requirements.txt /src/
+RUN pip3 install --no-cache-dir -r /src/requirements.txt
 
 # Switch to /app for execution (matches volume mounts)
 WORKDIR /app
 
-# Default command: run tests to verify build
-CMD ["fin_search_test"]
+# Default command: run C++ tests and Python API tests
+CMD ["bash", "-c", "fin_search_test && pytest /src/api/tests/test_api.py"]
