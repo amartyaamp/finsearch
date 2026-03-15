@@ -1,9 +1,5 @@
 # FinSearch — Project Roadmap & TODO
 
-> **Status snapshot (March 2026):** Core engine, REST API, CI/CD, multivariate support, confidence scoring, and decoupled index/query flow are all **done**. The remaining work is the product layer — frontend, live data, and productionisation. You are ~70% to a shippable product.
-
----
-
 ## ✅ Done — Core Engine
 
 - [x] **Multivariate support (MVP):** Pattern matching across multiple time series (e.g., Price + Volume). Confirms institutional participation context.
