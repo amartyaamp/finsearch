@@ -45,16 +45,16 @@ RUN cmake -DFAISS_ENABLE_GPU=OFF \
     ldconfig
 
 # 3. Final Setup & Build Project
-WORKDIR /src
-COPY . /src
+WORKDIR /workspace
+COPY . /workspace
 RUN cmake . && make && make install && ldconfig
 
 # 4. Install Python dependencies
-COPY requirements.txt /src/
-RUN pip3 install --no-cache-dir -r /src/requirements.txt
+COPY api/requirements.txt /workspace/api/
+RUN pip3 install --no-cache-dir -r /workspace/api/requirements.txt
 
 # Switch to /app for execution (matches volume mounts)
 WORKDIR /app
 
 # Default command: run C++ tests and Python API tests
-CMD ["bash", "-c", "fin_search_test && pytest /src/api/tests/test_api.py"]
+CMD ["bash", "-c", "fin_search_test && pytest /workspace/api/tests/test_api.py"]

@@ -13,20 +13,20 @@ if(NOT FAISS_LIB OR NOT FAISS_INCLUDE)
     message(FATAL_ERROR "FAISS headers or library not found. Installation may have failed.")
 endif()
 
-include_directories(${FAISS_INCLUDE})
+include_directories(${FAISS_INCLUDE} ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Define the source files (All in the root directory)
-set(ENGINE_SOURCES engine.cpp faiss_index_backend.cpp service_core.cpp)
-set(API_SOURCES c_api.cpp)
-set(PARSER_SOURCES csv_parser.cpp csv_data_source.cpp)
-set(TEST_SOURCES engine_test.cpp csv_parser_test.cpp faiss_index_backend_test.cpp csv_data_source_test.cpp service_core_test.cpp)
+set(ENGINE_SOURCES src/engine.cpp src/faiss_index_backend.cpp src/service_core.cpp)
+set(API_SOURCES src/c_api.cpp)
+set(PARSER_SOURCES src/csv_parser.cpp src/csv_data_source.cpp)
+set(TEST_SOURCES tests/engine_test.cpp tests/csv_parser_test.cpp tests/faiss_index_backend_test.cpp tests/csv_data_source_test.cpp tests/service_core_test.cpp)
 
 # --- SHARED LIBRARY ---
 add_library(fin_search_core SHARED ${ENGINE_SOURCES} ${PARSER_SOURCES} ${API_SOURCES})
 target_link_libraries(fin_search_core PUBLIC ${FAISS_LIB} ${BLAS_LIBRARIES} pthread)
 
 # 2. Define the main executable
-add_executable(fin_search main.cpp)
+add_executable(fin_search src/main.cpp)
 
 # 3. Link libraries for the main executable
 target_link_libraries(fin_search PRIVATE fin_search_core)

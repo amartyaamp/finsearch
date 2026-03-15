@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+cd "$(dirname "$0")/.."
+
 # Define color schemes for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
