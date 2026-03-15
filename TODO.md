@@ -1,48 +1,124 @@
-# Project Roadmap & TODO
+# FinSearch — Project Roadmap & TODO
 
-This document tracks the planned features and improvements for the FinSearch (Time Series Pattern Matcher) project.
+> **Status snapshot (March 2026):** Core engine, REST API, CI/CD, multivariate support, confidence scoring, and decoupled index/query flow are all **done**. The remaining work is the product layer — frontend, live data, and productionisation. You are ~70% to a shippable product.
 
-## 🚀 Core Features
-- [ ] **Configurable Parameters:** Allow `WINDOW_SIZE` and `K_NEIGHBORS` to be passed as command-line arguments.
-- [ ] **Extended Distance Metrics:** Implement support for Inner Product and Cosine Similarity in addition to L2.
-- [ ] **Normalization Strategies:** Add Min-Max scaling and Robust Scaler options.
-- [x] **Multivariate Support (MVP Critical):** Enable pattern matching across multiple time series (e.g., Price + Volume). *Crucial because pattern shapes mean little without the context of trading volume to confirm institutional participation.*
-    - [ ] Future: Support assigning different weights for different features during distance calculation to fine-tune similarity importance.
-- [x] **Metadata Tagging (MVP Critical):** Store and return timestamps/dates, and contextual metadata along with the index positions. *Crucial because knowing when a pattern occurred (e.g., 2008 crash vs. 2021 bull run) is required for strategy context.*
-- [x] **Confidence Scoring (MVP Critical):** Map absolute vector distances to a normalized "Similarity/Confidence Score" (e.g., 0-100%). *Crucial because humans (retail traders) and external systems need an intuitive bounding box on how "exact" a match is, unlike rigid rule-based systems.*
-- [x] **Arbitrary Data Sources:** Support time series data from any data source, abstracting away the hard dependency on the CSV file schema.
-    - [x] Decouple `TimeSeriesData` struct from specific columns like `prices` and `volumes` to support dynamic feature sets.
+---
 
-## 🏗 Architectural Refactoring
-- [x] **Decoupled Indexing Flow:** Create a separate flow/utility for indexing. This process will read the entire historical dataset, create the FAISS index, and persist the created index to disk (e.g., as a `.index` file) along with necessary metadata.
-- [x] **Decoupled Query Flow:** Create a separate flow/utility for querying. This process will load the persisted index from disk and perform fast lookups without needing to re-index the historical data.
-- [ ] **Optimize Persistent Storage:** Evaluate and implement optimizations for storing the index and metadata, potentially migrating from local `.index` files to a local database (e.g., SQLite, DuckDB) or a dedicated vector database for better scalability and management.
-- [ ] **Index Versioning:** Store metadata (WINDOW_SIZE, normalization type) alongside the persisted index to ensure consistency during lookups.
-- [] **Change `engine.cpp`: (Low hanging fruit)** This contain common util used by IndexBackend and hence should be renamed.
+## ✅ Done — Core Engine
 
-## 🚀 Service & API Layer
-- [x] **Service & API (MVP Critical):** Expose indexing and querying capabilities as a production-ready service. *Crucial because this is the primary monetization surface for B2B clients, Hedge Funds, and automated bot developers (SaaS model).*
-    - [x] **Library Packaging:** Refactor the core engine into a clean shared library (`.so` / `.dylib`) for easier integration into broader financial systems and the API layer.
-    - [x] **C++ Service Core:** Develop a concurrency wrapper around the shared library to handle concurrent search requests.
-    - [x] **REST API:** Create a robust REST API layer (e.g., Python/FastAPI wrapper or Crow C++) that exposes the service endpoints.
+- [x] **Multivariate support (MVP):** Pattern matching across multiple time series (e.g., Price + Volume). Confirms institutional participation context.
+  - [ ] **Future:** Weighted feature distances — assign different importance to Price vs Volume during similarity calculation.
+- [x] **Metadata tagging (MVP):** Store and return timestamps/dates and contextual metadata alongside index positions.
+- [x] **Confidence scoring (MVP):** Map absolute vector distances to a normalised similarity score (0–100%). Intuitive for retail traders and external systems.
+- [x] **Arbitrary data sources:** Decouple `TimeSeriesData` struct from fixed columns (`prices`, `volumes`) to support dynamic feature sets.
+- [x] **Decoupled indexing flow:** Separate CLI command reads historical data, builds FAISS index, and persists `.faiss` + `.meta` files to disk.
+- [x] **Decoupled query flow:** Separate CLI command loads persisted index from disk and performs fast lookups without re-indexing.
+- [x] **Library packaging:** Refactored core engine into a clean shared library (`.so` / `.dylib`) for API integration.
+- [x] **C++ concurrency wrapper:** Handles concurrent search requests around the shared library.
+- [x] **REST API (FastAPI):** Production-ready endpoints for indexing and querying, exposed via Python FFI wrapper.
+- [x] **CI/CD integration:** GitHub Actions pipeline runs tests and builds Docker images on every push.
+- [x] **Docker environment:** Consistent build environment with FAISS, CMake 3.28+, and GTest bundled.
 
-## 🛠 Robustness & Testing
-- [ ] **Advanced CSV Parsing:** Handle malformed CSV files, missing values, and different date formats gracefully.
-- [ ] **Validation Layer:** Add input validation for query patterns and historical data ranges.
-- [ ] **Expanded Test Suite:** 
-    - [ ] Unit tests for edge cases in `normalize_window`.
-    - [ ] Mock tests for FAISS index creation failure scenarios.
-- [x] **CI/CD Integration:** Set up GitHub Actions to run tests and build Docker images on every push.
+---
 
-## ⚡ Performance
-- [ ] **FAISS-GPU:** Add support for GPU-accelerated searches for significantly larger datasets.
-- [ ] **Memory Management:** Optimize memory consumption when loading very large historical CSVs.
+## 🔴 P0 — Ship Now (Frontend + Live Data)
 
-## 🌐 UI & Integration
-- [ ] **Visualization Dashboard (MVP Critical):** Build a simple web interface (React/Next.js) to display query patterns and their nearest matches side-by-side using charts. *Crucial because it serves as the secondary monetization surface for retail traders and visually demonstrates the API's power to prospective B2B buyers.*
-- [ ] **Chatbot Interface (B2C Focus):** Create integrations with messaging platforms (WhatsApp, Discord, Telegram) to allow users to subscribe to specific pattern alerts or query recent patterns directly from their phones.
-- [ ] **Live Data Sources:** Implement connectors for real-time financial data APIs (e.g., Alpha Vantage, Polygon.io). *(Depends on: Optimize Persistent Storage)*
+These are the last items between you and a publicly shareable product.
+
+- [ ] **Visualisation dashboard (MVP critical):**
+  Build a Next.js web interface as the primary product surface for retail traders and a live demo for B2B buyers.
+  - [ ] Symbol picker or CSV upload input
+  - [ ] Pattern search trigger with loading state
+  - [ ] Chart overlay view: current pattern vs top 3 historical matches (use TradingView Lightweight Charts — free, purpose-built for finance)
+  - [ ] Confidence score badge + matched date range displayed per result
+  - [ ] **Outcome annotation per match:** Show what price did in the N candles *after* each matched pattern ended (e.g., +7.2% / −3.1% over next 10 days). This is the feature traders will pay for.
+
+- [ ] **Live data connector — Yahoo Finance (MVP critical):**
+  Wire `yfinance` as a thin Python wrapper feeding into the existing indexer. No API key required, covers NSE/BSE/global symbols. This eliminates the CSV-upload friction for end users.
+  - [ ] Auto-fetch OHLCV on symbol entry in the dashboard
+  - [ ] *(Depends on: Optimised persistent storage — see P1)*
+  - [ ] **Future:** Alpha Vantage connector (paid tier for intraday)
+  - [ ] **Future:** Polygon.io connector (US markets, real-time)
+
+- [ ] **Public demo deployment:**
+  Deploy to Railway (Docker-native, `railway up` one-command deploy). Pre-index 5 years of Nifty 50 + Bank Nifty data. Add a "Try it live" badge to the README. Share on r/IndiaInvestments and Zerodha Tradingview forums for first 100 real users.
+
+---
+
+## 🟡 P1 — Next Sprint (Productionisation)
+
+- [ ] **API key auth layer:**
+  Add API key generation and validation before sharing any live URL publicly. Even a simple `.env`-backed key list is fine for v1. This is the monetisation gate — without it you cannot charge B2B clients.
+  - [ ] Key issuance endpoint (`POST /api/keys`)
+  - [ ] Middleware validation on all search/index routes
+  - [ ] Rate limiting per key (e.g., 100 searches/day on free tier)
+
+- [ ] **DuckDB persistent storage:**
+  Migrate from flat `.faiss` + `.meta` files to a DuckDB database. Enables multi-symbol index management, versioning, query history, and usage analytics in a single zero-infra file.
+  - [ ] Schema: `symbols`, `indexes`, `search_history`
+  - [ ] Migration script from current `.faiss` / `.meta` format
+  - *(Unblocks: live data connector, multi-symbol batch indexing)*
+
+- [ ] **Index versioning:**
+  Store `WINDOW_SIZE`, normalization type, data source hash, and creation timestamp alongside each persisted index. Prevents silent wrong results when an index is rebuilt with different parameters.
+
+- [ ] **Multi-symbol batch indexing:**
+  Add a YAML config listing symbols (e.g., `RELIANCE.NS`, `HDFCBANK.NS`, `NIFTY50`) + a cron job that auto-rebuilds indexes nightly from live data. Makes the product feel live rather than manual.
+
+- [ ] **Telegram / WhatsApp pattern alert bot (B2C growth):**
+  Users subscribe to a symbol and receive a Telegram message when a historically significant pattern is detected. Telegram Bot API is free and ~2 hours to wire. This is the viral distribution channel for Indian retail traders.
+  - [ ] `/search RELIANCE 60` — returns top match + confidence + chart image
+  - [ ] `/subscribe RELIANCE` — daily pattern digest
+  - [ ] WhatsApp via Twilio sandbox (secondary, behind Telegram)
+
+- [ ] **Optimised CSV parsing:**
+  Handle malformed CSV files, missing values, and varied date formats gracefully (currently fails silently on bad input).
+
+- [ ] **Input validation layer:**
+  Validate query patterns and historical data ranges at the API boundary before they reach the C++ core.
+
+---
+
+## 🟢 P2 — Polish & Scale
+
+- [ ] **Configurable CLI parameters:**
+  Pass `WINDOW_SIZE` and `K_NEIGHBORS` as command-line arguments instead of compile-time constants. Low-hanging fruit — unlocks experimentation without rebuilds.
+
+- [ ] **Extended distance metrics:**
+  Implement Inner Product and Cosine Similarity in addition to L2. Cosine similarity is often preferred for shape matching on normalised vectors.
+
+- [ ] **Normalization strategies:**
+  Add Min-Max scaling and Robust Scaler options alongside existing Z-score normalisation. Robust Scaler is better for data with outliers (e.g., crash days).
+
+- [ ] **Expanded test suite:**
+  - [ ] Unit tests for edge cases in `normalize_window` (zero-variance windows, single-point series)
+  - [ ] Mock tests for FAISS index creation failure scenarios
+  - [ ] Integration tests for the FastAPI endpoints
+
+- [ ] **engine.cpp rename (low-hanging fruit):**
+  `engine.cpp` contains common utilities shared by `IndexBackend` and should be renamed to reflect its utility role (e.g., `utils.cpp` or `common.cpp`).
+
+- [ ] **FAISS-GPU support:**
+  GPU-accelerated search for significantly larger datasets (10M+ vectors). Evaluate `faiss-gpu` Docker base image.
+
+- [ ] **Memory optimisation:**
+  Profile and optimise memory consumption when loading very large historical CSVs (>5 years, tick-level data).
+
+---
 
 ## 📄 Documentation
-- [ ] **API Documentation:** Generate Doxygen or similar documentation for the C++ core.
-- [ ] **Architectural Overview:** Document the decoupled indexing/querying flow for future maintainers.
+
+- [ ] **API documentation:** Generate Doxygen documentation for the C++ core library.
+- [ ] **Architectural overview:** Document the decoupled indexing/querying flow, the FFI bridge, and the concurrency model for future contributors.
+- [ ] **Deployment guide:** Step-by-step Railway / Render deployment with environment variables, pre-indexing script, and health check setup.
+
+---
+
+## 🗺 Deployment Roadmap Summary
+
+| Stage | Target | Stack | Distribution |
+|---|---|---|---|
+| **v0.1 — Demo** | Developers / curious traders | Railway + pre-indexed Nifty data | README badge, Twitter/X, Reddit |
+| **v0.2 — Product** | Retail traders (India) | Next.js dashboard + Telegram bot | r/IndiaInvestments, Zerodha forums |
+| **v1.0 — API SaaS** | Algo traders, quant devs | API keys + rate limiting + DuckDB | RapidAPI marketplace |
+| **v2.0 — B2B** | Brokerages, fintech platforms | White-label API / embedded widget | Direct outreach to Zerodha / Dhan / Upstox |
