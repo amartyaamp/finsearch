@@ -21,6 +21,16 @@
 
 These are the last items between you and a publicly shareable product.
 
+- [ ] **Human-friendly search API (`POST /search/symbol`):**
+  The current `POST /search` requires callers to supply raw `query_features` — a multi-dimensional float matrix that no human or UI can construct manually. Replace this with a symbol-based endpoint that accepts a ticker string and does the data fetching internally.
+  - [ ] Accept `{ "symbol": "RELIANCE.NS", "window_size": 60, "k_neighbors": 5 }`
+  - [ ] Fetch OHLCV via `yfinance.download()` and extract the last `window_size` rows
+  - [ ] Build the float matrix internally and delegate to the existing C++ search core
+  - [ ] Add a companion `GET /ohlcv?symbol=X&from=Y&to=Z` endpoint so the frontend can fetch historical candles for chart overlay rendering
+
+- [ ] **Input validation layer:**
+  Validate query patterns and historical data ranges at the API boundary before they reach the C++ core. Must ship before any public demo deployment.
+
 - [ ] **Visualisation dashboard (MVP critical):**
   Build a Next.js web interface as the primary product surface for retail traders and a live demo for B2B buyers.
   - [ ] Symbol picker or CSV upload input
@@ -30,9 +40,8 @@ These are the last items between you and a publicly shareable product.
   - [ ] **Outcome annotation per match:** Show what price did in the N candles *after* each matched pattern ended (e.g., +7.2% / −3.1% over next 10 days). This is the feature traders will pay for.
 
 - [ ] **Live data connector — Yahoo Finance (MVP critical):**
-  Wire `yfinance` as a thin Python wrapper feeding into the existing indexer. No API key required, covers NSE/BSE/global symbols. This eliminates the CSV-upload friction for end users.
+  Wire `yfinance` as a thin Python wrapper feeding into the existing indexer. No API key required, covers NSE/BSE/global symbols. This eliminates the CSV-upload friction for end users. Scoped to fetch-only per request (no caching) for v0.1.
   - [ ] Auto-fetch OHLCV on symbol entry in the dashboard
-  - [ ] *(Depends on: Optimised persistent storage — see P1)*
   - [ ] **Future:** Alpha Vantage connector (paid tier for intraday)
   - [ ] **Future:** Polygon.io connector (US markets, real-time)
 
@@ -53,7 +62,7 @@ These are the last items between you and a publicly shareable product.
   Migrate from flat `.faiss` + `.meta` files to a DuckDB database. Enables multi-symbol index management, versioning, query history, and usage analytics in a single zero-infra file.
   - [ ] Schema: `symbols`, `indexes`, `search_history`
   - [ ] Migration script from current `.faiss` / `.meta` format
-  - *(Unblocks: live data connector, multi-symbol batch indexing)*
+  - *(Unblocks: yfinance response caching, multi-symbol batch indexing)*
 
 - [ ] **Index versioning:**
   Store `WINDOW_SIZE`, normalization type, data source hash, and creation timestamp alongside each persisted index. Prevents silent wrong results when an index is rebuilt with different parameters.
@@ -61,24 +70,21 @@ These are the last items between you and a publicly shareable product.
 - [ ] **Multi-symbol batch indexing:**
   Add a YAML config listing symbols (e.g., `RELIANCE.NS`, `HDFCBANK.NS`, `NIFTY50`) + a cron job that auto-rebuilds indexes nightly from live data. Makes the product feel live rather than manual.
 
+- [ ] **Configurable CLI parameters:**
+  Pass `WINDOW_SIZE` and `K_NEIGHBORS` as command-line arguments instead of compile-time constants. Low-hanging fruit — unlocks experimentation without rebuilds.
+
+---
+
+## 🟢 P2 — Polish & Scale
+
 - [ ] **Telegram / WhatsApp pattern alert bot (B2C growth):**
-  Users subscribe to a symbol and receive a Telegram message when a historically significant pattern is detected. Telegram Bot API is free and ~2 hours to wire. This is the viral distribution channel for Indian retail traders.
+  Users subscribe to a symbol and receive a Telegram message when a historically significant pattern is detected. Telegram Bot API is free and ~2 hours to wire. Viral distribution channel for Indian retail traders.
   - [ ] `/search RELIANCE 60` — returns top match + confidence + chart image
   - [ ] `/subscribe RELIANCE` — daily pattern digest
   - [ ] WhatsApp via Twilio sandbox (secondary, behind Telegram)
 
 - [ ] **Optimised CSV parsing:**
   Handle malformed CSV files, missing values, and varied date formats gracefully (currently fails silently on bad input).
-
-- [ ] **Input validation layer:**
-  Validate query patterns and historical data ranges at the API boundary before they reach the C++ core.
-
----
-
-## 🟢 P2 — Polish & Scale
-
-- [ ] **Configurable CLI parameters:**
-  Pass `WINDOW_SIZE` and `K_NEIGHBORS` as command-line arguments instead of compile-time constants. Low-hanging fruit — unlocks experimentation without rebuilds.
 
 - [ ] **Extended distance metrics:**
   Implement Inner Product and Cosine Similarity in addition to L2. Cosine similarity is often preferred for shape matching on normalised vectors.
