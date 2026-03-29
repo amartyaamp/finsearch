@@ -21,12 +21,12 @@
 
 These are the last items between you and a publicly shareable product.
 
-- [ ] **Human-friendly search API (`POST /search/symbol`):**
+- [x] **Human-friendly search API (`POST /search/symbol`):**
   The current `POST /search` requires callers to supply raw `query_features` — a multi-dimensional float matrix that no human or UI can construct manually. Replace this with a symbol-based endpoint that accepts a ticker string and does the data fetching internally.
-  - [ ] Accept `{ "symbol": "RELIANCE.NS", "window_size": 60, "k_neighbors": 5 }`
-  - [ ] Fetch OHLCV via `yfinance.download()` and extract the last `window_size` rows
-  - [ ] Build the float matrix internally and delegate to the existing C++ search core
-  - [ ] Add a companion `GET /ohlcv?symbol=X&from=Y&to=Z` endpoint so the frontend can fetch historical candles for chart overlay rendering
+  - [x] Accept `{ "symbol": "RELIANCE.NS", "window_size": 60, "k_neighbors": 5 }`
+  - [x] Fetch OHLCV via `yfinance.download()` and extract the last `window_size` rows
+  - [x] Build the float matrix internally and delegate to the existing C++ search core
+  - [x] Add a companion `GET /ohlcv?symbol=X&from=Y&to=Z` endpoint so the frontend can fetch historical candles for chart overlay rendering
 
 - [ ] **Input validation layer:**
   Validate query patterns and historical data ranges at the API boundary before they reach the C++ core. Must ship before any public demo deployment.

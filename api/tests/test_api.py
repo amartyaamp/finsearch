@@ -3,6 +3,8 @@ import os
 import sys
 import tempfile
 import csv
+from unittest.mock import patch
+import pandas as pd
 
 # Add the parent directory to sys.path to import api.main
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -28,17 +30,17 @@ def test_index_and_search_endpoints():
         resp = client.post("/index", json={"csv_file_path": "/invalid/path.csv", "window_size": 10})
         assert resp.status_code == 400
 
-        # Valid Indexing
-        resp = client.post("/index", json={"csv_file_path": csv_path, "window_size": 10})
+        # Valid Indexing (using window_size=60 for compatibility with search/symbol)
+        resp = client.post("/index", json={"csv_file_path": csv_path, "window_size": 60})
         assert resp.status_code == 200
 
         # Valid Search (Close and Volume features)
-        q_close = [100.0] * 10
-        q_vol = [1000.0] * 10
+        q_close = [100.0] * 60
+        q_vol = [1000.0] * 60
         resp = client.post("/search", json={
             "query_features": [q_close, q_vol],
             "k_neighbors": 2,
-            "window_size": 10
+            "window_size": 60
         })
         assert resp.status_code == 200
         data = resp.json()
@@ -47,3 +49,40 @@ def test_index_and_search_endpoints():
 
     finally:
         os.remove(csv_path)
+
+def test_search_symbol_and_ohlcv():
+    from main import core
+    if not core:
+        import pytest
+        pytest.skip("C++ Core not loaded, skipping integration tests.")
+        
+    dates = pd.date_range("2023-01-01", periods=100)
+    df = pd.DataFrame({
+        "Open": [100.0] * 100,
+        "High": [105.0] * 100,
+        "Low": [95.0] * 100,
+        "Close": [100.0] * 100,
+        "Volume": [1000.0] * 100
+    }, index=dates)
+
+    with patch("main.yf.download") as mock_download:
+        mock_download.return_value = df
+        
+        # Test /search/symbol
+        resp = client.post("/search/symbol", json={
+            "symbol": "RELIANCE.NS",
+            "window_size": 60,
+            "k_neighbors": 2
+        })
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "results" in data
+        
+        # Test /ohlcv
+        resp = client.get("/ohlcv?symbol=RELIANCE.NS")
+        assert resp.status_code == 200
+        ohlcv_data = resp.json()
+        assert isinstance(ohlcv_data, list)
+        assert len(ohlcv_data) == 100
+        assert "time" in ohlcv_data[0]
+        assert "close" in ohlcv_data[0]
