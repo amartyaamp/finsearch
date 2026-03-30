@@ -1,5 +1,5 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, Query
+from pydantic import BaseModel, Field, model_validator
 from typing import List, Optional
 import os
 import sys
@@ -17,22 +17,31 @@ except Exception as e:
     print(f"Warning: Failed to load libfin_search_core: {e}")
 
 class IndexRequest(BaseModel):
-    csv_file_path: str
-    window_size: int = 60
+    source_path: str = Field(..., min_length=1, description="Path to the source data file (e.g., CSV)")
+    window_size: int = Field(60, ge=1, le=100)
 
 class SearchRequest(BaseModel):
-    query_features: List[List[float]]
-    k_neighbors: int = 5
-    window_size: int = 60
+    query_features: List[List[float]] = Field(..., description="List of feature sequences (e.g., [close_prices, volumes])")
+    k_neighbors: int = Field(5, ge=1, le=100)
+    window_size: int = Field(60, ge=1, le=100)
+
+    @model_validator(mode='after')
+    def validate_features(self) -> 'SearchRequest':
+        if not self.query_features:
+            raise ValueError('query_features cannot be empty')
+        for idx, feature_list in enumerate(self.query_features):
+            if len(feature_list) != self.window_size:
+                raise ValueError(f'Feature list at index {idx} has length {len(feature_list)}, expected window_size {self.window_size}')
+        return self
 
 @app.post("/index")
 def build_index(req: IndexRequest):
     if not core:
         raise HTTPException(status_code=500, detail="C++ Core not loaded")
-    if not os.path.exists(req.csv_file_path):
-        raise HTTPException(status_code=400, detail="CSV file not found")
+    if not os.path.exists(req.source_path):
+        raise HTTPException(status_code=400, detail="Source file not found")
         
-    ret = core.build_index_from_csv(req.csv_file_path, req.window_size)
+    ret = core.build_index_from_csv(req.source_path, req.window_size)
     if ret < 0:
         raise HTTPException(status_code=500, detail=f"Failed to build index, error code: {ret}")
     return {"status": "success", "message": "Index built successfully"}
@@ -49,9 +58,9 @@ def search_index(req: SearchRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 class SymbolSearchRequest(BaseModel):
-    symbol: str
-    window_size: int = 60
-    k_neighbors: int = 5
+    symbol: str = Field(..., min_length=1)
+    window_size: int = Field(60, ge=1, le=100)
+    k_neighbors: int = Field(5, ge=1, le=100)
 
 @app.post("/search/symbol")
 def search_symbol(req: SymbolSearchRequest):
@@ -92,7 +101,13 @@ def search_symbol(req: SymbolSearchRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/ohlcv")
-def get_ohlcv(symbol: str, from_date: Optional[str] = None, to_date: Optional[str] = None):
+def get_ohlcv(
+    symbol: str = Query(..., min_length=1),
+    from_date: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    to_date: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+):
+    if from_date and to_date and from_date > to_date:
+        raise HTTPException(status_code=400, detail="from_date must be less than or equal to to_date")
     try:
         if from_date and to_date:
             df = yf.download(symbol, start=from_date, end=to_date, progress=False)

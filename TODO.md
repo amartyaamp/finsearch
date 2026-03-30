@@ -28,7 +28,7 @@ These are the last items between you and a publicly shareable product.
   - [x] Build the float matrix internally and delegate to the existing C++ search core
   - [x] Add a companion `GET /ohlcv?symbol=X&from=Y&to=Z` endpoint so the frontend can fetch historical candles for chart overlay rendering
 
-- [ ] **Input validation layer:**
+- [x] **Input validation layer:**
   Validate query patterns and historical data ranges at the API boundary before they reach the C++ core. Must ship before any public demo deployment.
 
 - [ ] **Visualisation dashboard (MVP critical):**

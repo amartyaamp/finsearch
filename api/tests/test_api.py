@@ -27,11 +27,11 @@ def test_index_and_search_endpoints():
 
     try:
         # Invalid file
-        resp = client.post("/index", json={"csv_file_path": "/invalid/path.csv", "window_size": 10})
+        resp = client.post("/index", json={"source_path": "/invalid/path.csv", "window_size": 10})
         assert resp.status_code == 400
 
         # Valid Indexing (using window_size=60 for compatibility with search/symbol)
-        resp = client.post("/index", json={"csv_file_path": csv_path, "window_size": 60})
+        resp = client.post("/index", json={"source_path": csv_path, "window_size": 60})
         assert resp.status_code == 200
 
         # Valid Search (Close and Volume features)
@@ -86,3 +86,35 @@ def test_search_symbol_and_ohlcv():
         assert len(ohlcv_data) == 100
         assert "time" in ohlcv_data[0]
         assert "close" in ohlcv_data[0]
+
+def test_input_validation():
+    # Test /index
+    resp = client.post("/index", json={"source_path": "dummy.csv", "window_size": -5})
+    assert resp.status_code == 422
+    
+    resp = client.post("/index", json={"source_path": "dummy.csv", "window_size": 150})
+    assert resp.status_code == 422
+
+    # Test /search
+    resp = client.post("/search", json={
+        "query_features": [[1.0]*10],
+        "k_neighbors": 5,
+        "window_size": 60
+    })
+    assert resp.status_code == 422
+
+    # Test /search/symbol
+    resp = client.post("/search/symbol", json={
+        "symbol": "AAPL",
+        "window_size": -1,
+        "k_neighbors": 5
+    })
+    assert resp.status_code == 422
+
+    # Test /ohlcv
+    resp = client.get("/ohlcv?symbol=AAPL&from_date=invalid-date")
+    assert resp.status_code == 422
+
+    resp = client.get("/ohlcv?symbol=AAPL&from_date=2023-12-31&to_date=2023-01-01")
+    assert resp.status_code == 400
+
