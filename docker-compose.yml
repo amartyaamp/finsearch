@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: finsearch_api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Optional: Mount a local data directory so indexes persist between restarts
+      - ./data:/app/data
+      - ./indexes:/app/indexes
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: finsearch_ui
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      # Next.js will use this internally to route /api/backend proxy requests
+      - API_URL=http://backend:8000

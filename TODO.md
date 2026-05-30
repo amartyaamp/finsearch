@@ -31,17 +31,17 @@ These are the last items between you and a publicly shareable product.
 - [x] **Input validation layer:**
   Validate query patterns and historical data ranges at the API boundary before they reach the C++ core. Must ship before any public demo deployment.
 
-- [ ] **Visualisation dashboard (MVP critical):**
+- [x] **Visualisation dashboard (MVP critical):**
   Build a Next.js web interface as the primary product surface for retail traders and a live demo for B2B buyers.
-  - [ ] Symbol picker or CSV upload input
-  - [ ] Pattern search trigger with loading state
-  - [ ] Chart overlay view: current pattern vs top 3 historical matches (use TradingView Lightweight Charts — free, purpose-built for finance)
-  - [ ] Confidence score badge + matched date range displayed per result
-  - [ ] **Outcome annotation per match:** Show what price did in the N candles *after* each matched pattern ended (e.g., +7.2% / −3.1% over next 10 days). This is the feature traders will pay for.
+  - [x] Symbol picker or CSV upload input
+  - [x] Pattern search trigger with loading state
+  - [x] Chart overlay view: current pattern vs top 3 historical matches (use TradingView Lightweight Charts — free, purpose-built for finance)
+  - [x] Confidence score badge + matched date range displayed per result
+  - [x] **Outcome annotation per match:** Show what price did in the N candles *after* each matched pattern ended (e.g., +7.2% / −3.1% over next 10 days). This is the feature traders will pay for.
 
-- [ ] **Live data connector — Yahoo Finance (MVP critical):**
+- [x] **Live data connector — Yahoo Finance (MVP critical):**
   Wire `yfinance` as a thin Python wrapper feeding into the existing indexer. No API key required, covers NSE/BSE/global symbols. This eliminates the CSV-upload friction for end users. Scoped to fetch-only per request (no caching) for v0.1.
-  - [ ] Auto-fetch OHLCV on symbol entry in the dashboard
+  - [x] Auto-fetch OHLCV on symbol entry in the dashboard
   - [ ] **Future:** Alpha Vantage connector (paid tier for intraday)
   - [ ] **Future:** Polygon.io connector (US markets, real-time)
 
