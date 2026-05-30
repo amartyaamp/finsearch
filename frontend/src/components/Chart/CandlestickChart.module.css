@@ -1,0 +1,49 @@
+/* CandlestickChart.module.css — shared by all chart components */
+
+.wrapper {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0d1424;
+  border: 1px solid #1f2d47;
+}
+
+.chart {
+  width: 100%;
+}
+
+/* Pattern overlay legend */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid #1f2d47;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--colour, #94a3b8);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--colour, #94a3b8);
+  flex-shrink: 0;
+}
+
+.legendDash {
+  width: 16px;
+  height: 2px;
+  background: var(--colour, #94a3b8);
+  border-radius: 1px;
+  flex-shrink: 0;
+  opacity: 0.8;
+}

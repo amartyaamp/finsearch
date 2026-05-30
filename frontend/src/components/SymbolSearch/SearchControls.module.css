@@ -1,0 +1,102 @@
+/* SearchControls.module.css */
+
+.wrapper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 760px;
+}
+
+@media (max-width: 640px) {
+  .wrapper { grid-template-columns: 1fr; }
+}
+
+.field {
+  background: #111827;
+  border: 1px solid #1f2d47;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.fieldHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.fieldValue {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: #6366f1;
+}
+
+.fieldUnit {
+  font-size: 11px;
+  color: #475569;
+  font-family: inherit;
+}
+
+.sliderWrapper {
+  width: 100%;
+}
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    #6366f1 0%,
+    #6366f1 var(--pct, 50%),
+    #1f2d47 var(--pct, 50%),
+    #1f2d47 100%
+  );
+  cursor: pointer;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.35);
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #6366f1;
+  border: none;
+  cursor: pointer;
+}
+
+.fieldNote {
+  font-size: 11px;
+  color: #334155;
+  margin-top: 8px;
+  line-height: 1.4;
+}

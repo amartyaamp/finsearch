@@ -1,0 +1,142 @@
+/* MatchCard.module.css */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: #111827;
+  border: 1px solid #1f2d47;
+  border-radius: 14px;
+  padding: 20px 16px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  position: relative;
+  width: 100%;
+}
+
+.card:hover {
+  border-color: var(--accent, #6366f1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.card.selected {
+  border-color: var(--accent, #6366f1);
+  background: #131d31;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.rankBadge {
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  background: #0a0e1a;
+  border: 1px solid;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 8px;
+  letter-spacing: 0.04em;
+}
+
+/* Score ring */
+.scoreSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+}
+
+.ringValue {
+  position: absolute;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.scoreLabel {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+/* Info section */
+.infoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.infoIcon {
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.infoText {
+  font-size: 11px;
+  color: #64748b;
+  font-family: 'JetBrains Mono', monospace;
+  text-align: left;
+  line-height: 1.4;
+}
+
+/* Outcome annotation */
+.outcome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  padding: 8px 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.outcomePos {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.outcomeNeg {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.outcomeNeutral {
+  background: rgba(71, 85, 105, 0.15);
+  color: #475569;
+  border: 1px solid #1f2d47;
+}
+
+.outcomePct {
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.outcomeLabel {
+  font-size: 11px;
+  opacity: 0.75;
+}

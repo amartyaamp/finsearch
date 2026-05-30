@@ -1,0 +1,239 @@
+/* page.module.css */
+
+.main {
+  min-height: 100vh;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+/* ── Hero ───────────────────────────────────────────── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 64px 0 48px;
+  text-align: center;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #818cf8;
+}
+
+.heroBadgeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6366f1;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.8);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.heroTitle {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: #f1f5f9;
+  max-width: 760px;
+}
+
+.heroAccent {
+  background: linear-gradient(135deg, #6366f1, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroSubtitle {
+  font-size: 17px;
+  color: #64748b;
+  max-width: 560px;
+  line-height: 1.7;
+}
+
+/* ── Error ──────────────────────────────────────────── */
+.errorWrapper {
+  max-width: 760px;
+  margin: 0 auto 24px;
+  width: 100%;
+}
+
+/* ── Results section ─────────────────────────────────── */
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding-top: 8px;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sectionTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sectionSymbol {
+  font-family: 'JetBrains Mono', monospace;
+  color: #818cf8;
+}
+
+.outcomesBadge {
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 20px;
+  padding: 3px 10px;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.sectionSubtitle {
+  font-size: 14px;
+  color: #475569;
+}
+
+/* ── Chart section ───────────────────────────────────── */
+.chartSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid #1f2d47;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  background: #0a0e1a;
+  border-bottom: 1px solid #1f2d47;
+  padding: 8px 12px;
+  gap: 4px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  padding: 7px 14px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tab:hover {
+  background: #111827;
+  color: #94a3b8;
+}
+
+.tab.tabActive {
+  background: #111827;
+  color: #818cf8;
+  border: 1px solid #1f2d47;
+}
+
+/* Remove border for inner chart so chartSection border is the only one */
+.chartSection > div:last-child {
+  border: none;
+  border-radius: 0;
+}
+
+/* ── Match cards ─────────────────────────────────────── */
+.matchSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.matchTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+}
+
+/* ── Stats row (empty state) ─────────────────────────── */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 32px;
+}
+
+@media (max-width: 768px) {
+  .statsRow { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+  .statsRow { grid-template-columns: 1fr; }
+}
+
+.statBox {
+  background: #111827;
+  border: 1px solid #1f2d47;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.statBox:hover { border-color: #334155; }
+
+.statLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.statValue {
+  font-size: 22px;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  color: #818cf8;
+  margin-bottom: 4px;
+}
+
+.statSub {
+  font-size: 12px;
+  color: #334155;
+}

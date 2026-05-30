@@ -52,6 +52,9 @@ These are the last items between you and a publicly shareable product.
 
 ## 🟡 P1 — Next Sprint (Productionisation)
 
+- [ ] **Frontend CI/CD Pipeline:**
+  Add a GitHub Actions workflow to automatically check frontend changes (run `npm install`, `npm run lint`, and `npm run build` on PRs/pushes to ensure the Next.js app compiles without errors).
+
 - [ ] **API key auth layer:**
   Add API key generation and validation before sharing any live URL publicly. Even a simple `.env`-backed key list is fine for v1. This is the monetisation gate — without it you cannot charge B2B clients.
   - [ ] Key issuance endpoint (`POST /api/keys`)

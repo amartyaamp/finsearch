@@ -16,6 +16,28 @@ except Exception as e:
     core = None
     print(f"Warning: Failed to load libfin_search_core: {e}")
 
+# ── Auto-load index on startup ────────────────────────────────────────────────
+# If FIN_INDEX_PATH env var is set, or the default /app/nifty.faiss exists,
+# load the pre-built FAISS index so searches work without a separate POST /index.
+_DEFAULT_INDEX_PATHS = [
+    os.environ.get("FIN_INDEX_PATH", ""),
+    "/app/nifty.faiss",
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "nifty.faiss"),
+]
+
+if core:
+    for _idx_path in _DEFAULT_INDEX_PATHS:
+        if _idx_path and os.path.exists(_idx_path):
+            _ret = core.load_index(_idx_path, 60)
+            if _ret == 0:
+                print(f"[FinSearch] Auto-loaded index from: {_idx_path}")
+            else:
+                print(f"[FinSearch] Warning: Failed to load index from {_idx_path} (code {_ret})")
+            break
+    else:
+        print("[FinSearch] No pre-built index found. Use POST /index to build one.")
+
+
 class IndexRequest(BaseModel):
     source_path: str = Field(..., min_length=1, description="Path to the source data file (e.g., CSV)")
     window_size: int = Field(60, ge=1, le=100)
