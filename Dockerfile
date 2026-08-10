@@ -56,5 +56,11 @@ RUN pip3 install --no-cache-dir -r /workspace/api/requirements.txt
 # Switch to /app for execution (matches volume mounts)
 WORKDIR /app
 
-# Default command: run C++ tests and Python API tests
+# 5. Pre-index Data for Production
+# This builds nifty.faiss and nifty.faiss.meta into the image
+RUN cd /workspace && python3 scripts/pre_index.py
+RUN cp /workspace/nifty.faiss /app/nifty.faiss || true
+RUN cp /workspace/nifty.faiss.meta /app/nifty.faiss.meta || true
+
+# Default command: run C++ tests and Python API tests (Overridden by docker-compose in prod)
 CMD ["bash", "-c", "fin_search_test && pytest /workspace/api/tests/test_api.py"]
