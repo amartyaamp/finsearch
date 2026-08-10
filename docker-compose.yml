@@ -8,6 +8,7 @@ services:
     container_name: finsearch_api
     ports:
       - "8000:8000"
+    command: bash -c "uvicorn api.main:app --host 0.0.0.0 --port $${PORT:-8000}"
     volumes:
       # Optional: Mount a local data directory so indexes persist between restarts
       - ./data:/app/data

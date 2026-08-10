@@ -22,9 +22,11 @@ void FaissIndexBackend::build_index(
     return;
   }
 
-  // 2. Create the Index using std::make_unique (L2 distance, Flat storage)
-  index = std::make_unique<faiss::IndexFlatL2>(D);
-  metadata_store.clear();
+  // 2. Create the Index using std::make_unique (L2 distance, Flat storage) if it doesn't exist
+  if (!index) {
+    index = std::make_unique<faiss::IndexFlatL2>(D);
+    metadata_store.clear();
+  }
 
   // 3. Prepare data for FAISS (Flatten the 2D vector into a 1D array)
   std::vector<float> all_data;

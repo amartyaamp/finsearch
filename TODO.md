@@ -45,7 +45,7 @@ These are the last items between you and a publicly shareable product.
   - [ ] **Future:** Alpha Vantage connector (paid tier for intraday)
   - [ ] **Future:** Polygon.io connector (US markets, real-time)
 
-- [ ] **Public demo deployment:**
+- [x] **Public demo deployment:**
   Deploy to Railway (Docker-native, `railway up` one-command deploy). Pre-index 5 years of Nifty 50 + Bank Nifty data. Add a "Try it live" badge to the README. Share on r/IndiaInvestments and Zerodha Tradingview forums for first 100 real users.
 
 ---

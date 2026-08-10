@@ -1,5 +1,7 @@
 # FinSearch — Financial Pattern Search Engine
 
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/YOUR_TEMPLATE_ID)
+
 A high-performance similarity search engine for financial time series data. FinSearch uses **FAISS** vector indexing and **Z-score normalization** to find historical patterns that match the *shape* of a query window, regardless of absolute price level.
 
 ---
@@ -202,6 +204,25 @@ Run Python API (from repo root):
 pip install -r api/requirements.txt
 uvicorn api.main:app --reload
 ```
+
+---
+
+## Railway Deployment
+
+FinSearch is natively configured for easy, one-command deployment to Railway using Docker Compose.
+
+1. Install the [Railway CLI](https://docs.railway.app/reference/cli).
+2. Login to your Railway account:
+   ```bash
+   railway login
+   ```
+3. Link to a new or existing Railway project, then deploy:
+   ```bash
+   railway link
+   railway up
+   ```
+
+Railway will automatically detect the `docker-compose.yml` file, build the backend and frontend containers, and wire them up.
 
 ---
 

@@ -119,3 +119,30 @@ TEST_F(FaissIndexBackendTest, SearchIncludesConfidenceScore) {
   // The top result is an exact self-match (distance ≈ 0) → must be ≥ 99%
   EXPECT_GE(results[0].confidence_score, 99.0f);
 }
+
+TEST_F(FaissIndexBackendTest, AppendsToExistingIndex) {
+  FaissIndexBackend backend;
+  // First build
+  backend.build_index({dummy_prices}, dummy_metadata, window_size);
+  long initial_vectors = backend.get_total_vectors();
+  EXPECT_EQ(initial_vectors, 191);
+  
+  // Create another set of dummy data to append
+  std::vector<float> more_prices;
+  std::vector<RowMetadata> more_metadata;
+  for (int i = 0; i < 50; ++i) {
+    more_prices.push_back(200.0f + i * 0.5f);
+    RowMetadata meta;
+    meta.timestamp = "2023-02-01 " + std::to_string(i) + ":00:00";
+    more_metadata.push_back(meta);
+  }
+  
+  // Second build (should append)
+  backend.build_index({more_prices}, more_metadata, window_size);
+  long final_vectors = backend.get_total_vectors();
+  long expected_additional = 50 - window_size + 1; // 41
+  
+  EXPECT_EQ(final_vectors, initial_vectors + expected_additional);
+  EXPECT_EQ(backend.get_total_metadata(), initial_vectors + expected_additional);
+}
+
