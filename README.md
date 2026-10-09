@@ -251,10 +251,8 @@ GitHub Actions runs on every push:
 
 ## What's Next
 
-See [TODO.md](./TODO.md) for the full roadmap. Top priorities:
+See [docs/roadmap.md](./docs/roadmap.md) for product direction and [GitHub Issues](https://github.com/amartyaamp/finsearch/issues) for planned work. Top priorities:
 
-- **Visualisation dashboard** — Next.js chart overlay UI (TradingView Lightweight Charts)
-- **Live data connector** — `yfinance` integration for symbol-based querying (no CSV upload needed)
-- **Public deployment** — Railway one-command deploy with pre-indexed Nifty 50 data
-- **API key auth** — Rate-limited key issuance for B2B monetisation
-- **DuckDB storage** — Replace flat `.faiss`/`.meta` files with a versioned database
+- **Complete matches** — each match carries its instrument, bars and outcome ([#1](https://github.com/amartyaamp/finsearch/issues/1))
+- **API key auth** — Rate-limited key issuance for B2B monetisation ([#6](https://github.com/amartyaamp/finsearch/issues/6))
+- **DuckDB storage** — Replace flat index files with a versioned database ([#7](https://github.com/amartyaamp/finsearch/issues/7))
